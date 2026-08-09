@@ -21,14 +21,11 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
 import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Owns every player's navigation cursor and performs the locate + teleport.
@@ -60,21 +57,27 @@ public final class NavigationManager {
         BACK
     }
 
-    private static final Map<UUID, NavigationState> STATES = new ConcurrentHashMap<>();
-
     private NavigationManager() {
     }
 
+    /**
+     * State is read straight out of the world save, so a selection survives a restart. The
+     * {@code resolve} call is a no-op except on the first access after a load, where it rebuilds
+     * the structure list against the registry as it is now.
+     */
     public static NavigationState state(ServerPlayer player) {
-        return STATES.computeIfAbsent(player.getUUID(), uuid -> new NavigationState());
+        NavigationState state = LocateNextSavedData.get(player.server).state(player.getUUID());
+        state.resolve(player.server);
+        return state;
     }
 
-    public static void forget(UUID uuid) {
-        STATES.remove(uuid);
-    }
-
-    public static void clearAll() {
-        STATES.clear();
+    /**
+     * Queues the world save. Called at the end of every action that changes a cursor, a history or
+     * a setting — SavedData only writes when something has marked it, and a missed call means work
+     * silently lost on restart.
+     */
+    public static void markDirty(ServerPlayer player) {
+        LocateNextSavedData.get(player.server).setDirty();
     }
 
     // ------------------------------------------------------------------ selection
@@ -93,6 +96,7 @@ public final class NavigationManager {
 
         NavigationState state = state(player);
         state.select(namespace, structures);
+        markDirty(player);
         syncState(player);
 
         Msg.info(player, Component.empty()
@@ -262,7 +266,19 @@ public final class NavigationManager {
 
     // ------------------------------------------------------------------ the jump
 
+    /**
+     * Single choke point for persistence: every jump can move a cursor, extend a history or record
+     * a home position, and {@link #perform} has too many early returns to mark each one safely.
+     */
     private static void jump(ServerPlayer player, NavigationState state, Mode mode) {
+        try {
+            perform(player, state, mode);
+        } finally {
+            markDirty(player);
+        }
+    }
+
+    private static void perform(ServerPlayer player, NavigationState state, Mode mode) {
         ResourceLocation id = state.current();
         if (id == null) {
             return;
@@ -359,6 +375,12 @@ public final class NavigationManager {
         BlockPos base = wantNew && last != null && last.dimension() == level.dimension()
                 ? last.structurePos()
                 : playerInTarget;
+
+        // Sent before the blocking search, not after. Packets are handed to the netty event loop
+        // rather than written on the server thread, so this reaches the client while the search is
+        // still running — which is the whole point, given a cold search can take seconds. Only the
+        // searching paths say it; a revisit is instant and would just be noise.
+        Msg.info(player, Msg.dim("Locating " + id + "…"));
 
         int step = stepBlocks(level, holder.get());
         Pair<BlockPos, Holder<Structure>> hit = null;
@@ -570,8 +592,4 @@ public final class NavigationManager {
         ServerPlayNetworking.send(player, new NavStatePayload(state.namespace(), state.index()));
     }
 
-    @Nullable
-    public static NavigationState peek(UUID uuid) {
-        return STATES.get(uuid);
-    }
 }

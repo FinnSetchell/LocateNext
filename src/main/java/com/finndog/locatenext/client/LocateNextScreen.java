@@ -9,6 +9,7 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +49,23 @@ public final class LocateNextScreen extends Screen {
     private List<Integer> visibleStructures = List.of();
     private List<String> visibleMods = List.of();
 
+    /** Where closing returns to. Null when opened by the keybind, which closes to the world. */
+    @Nullable private final Screen parent;
+
     public LocateNextScreen() {
+        this(null);
+    }
+
+    public LocateNextScreen(@Nullable Screen parent) {
         super(Component.translatable("locatenext.screen.title"));
+        this.parent = parent;
+    }
+
+    @Override
+    public void onClose() {
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(this.parent);
+        }
     }
 
     @Override

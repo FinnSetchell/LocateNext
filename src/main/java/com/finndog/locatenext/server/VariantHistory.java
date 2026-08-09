@@ -1,7 +1,12 @@
 package com.finndog.locatenext.server;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -83,5 +88,53 @@ public final class VariantHistory {
 
     public List<Landing> landings() {
         return List.copyOf(this.landings);
+    }
+
+    // ------------------------------------------------------------------ persistence
+
+    // Positions go in as plain int arrays rather than through NbtUtils, whose block-pos helpers
+    // changed shape across 1.20/1.21 and would need a Stonecutter branch per version.
+    public CompoundTag save() {
+        CompoundTag tag = new CompoundTag();
+        ListTag list = new ListTag();
+        for (Landing landing : this.landings) {
+            CompoundTag entry = new CompoundTag();
+            entry.putString("dimension", landing.dimension().location().toString());
+            entry.putIntArray("structure", pack(landing.structurePos()));
+            entry.putIntArray("landing", pack(landing.landing()));
+            list.add(entry);
+        }
+        tag.put("landings", list);
+        tag.putInt("cursor", this.cursor);
+        return tag;
+    }
+
+    public static VariantHistory load(CompoundTag tag) {
+        VariantHistory history = new VariantHistory();
+        ListTag list = tag.getList("landings", Tag.TAG_COMPOUND);
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag entry = list.getCompound(i);
+            ResourceLocation dimensionId = ResourceLocation.tryParse(entry.getString("dimension"));
+            BlockPos structure = unpack(entry.getIntArray("structure"));
+            BlockPos landing = unpack(entry.getIntArray("landing"));
+            if (dimensionId == null || structure == null || landing == null) {
+                continue;
+            }
+            history.landings.add(new Landing(
+                    ResourceKey.create(Registries.DIMENSION, dimensionId), structure, landing));
+        }
+        // Clamped rather than trusted: entries above can be skipped as malformed, which would
+        // otherwise leave the cursor pointing past the end.
+        history.cursor = Math.min(tag.getInt("cursor"), history.landings.size() - 1);
+        return history;
+    }
+
+    private static int[] pack(BlockPos pos) {
+        return new int[]{pos.getX(), pos.getY(), pos.getZ()};
+    }
+
+    @Nullable
+    private static BlockPos unpack(int[] values) {
+        return values.length == 3 ? new BlockPos(values[0], values[1], values[2]) : null;
     }
 }

@@ -1,8 +1,14 @@
 package com.finndog.locatenext.server;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,12 +67,42 @@ public final class NavigationState {
         return !this.structures.isEmpty();
     }
 
+    /** A fresh pick by the player: history for the previous mod is no longer wanted. */
     public void select(String namespace, List<ResourceLocation> structures) {
         this.namespace = namespace;
         this.structures = List.copyOf(structures);
         this.index = -1;
         this.visited.clear();
         this.variants.clear();
+    }
+
+    /**
+     * Rebuilds the list for the namespace already selected, keeping visited marks and instance
+     * history. Used after a datapack reload and when restoring a save, where the selection hasn't
+     * changed but the registry contents may have.
+     */
+    public void reselect(List<ResourceLocation> structures) {
+        this.structures = List.copyOf(structures);
+        this.index = Math.min(this.index, this.structures.size() - 1);
+    }
+
+    /**
+     * Fills in the structure list after a load. The saved data records only the namespace, since
+     * the structures themselves come from a datapack-driven registry that may have changed between
+     * sessions — so the list is rebuilt against whatever is registered now.
+     */
+    public void resolve(MinecraftServer server) {
+        if (this.namespace.isEmpty() || !this.structures.isEmpty()) {
+            return;
+        }
+        List<ResourceLocation> current = StructureCatalog.byNamespace(server).get(this.namespace);
+        if (current == null || current.isEmpty()) {
+            // The mod that was selected is no longer present.
+            this.namespace = "";
+            this.index = -1;
+            return;
+        }
+        reselect(current);
     }
 
     public void clear() {
@@ -163,5 +199,72 @@ public final class NavigationState {
     public void clearHome() {
         this.homePos = null;
         this.homeDimension = null;
+    }
+
+    // ------------------------------------------------------------------ persistence
+
+    public CompoundTag save() {
+        CompoundTag tag = new CompoundTag();
+        tag.putString("namespace", this.namespace);
+        tag.putInt("index", this.index);
+        tag.putInt("radius", this.radius);
+        tag.putBoolean("unexploredOnly", this.unexploredOnly);
+        tag.putBoolean("autoDimension", this.autoDimension);
+
+        ListTag visitedList = new ListTag();
+        this.visited.forEach(id -> visitedList.add(StringTag.valueOf(id.toString())));
+        tag.put("visited", visitedList);
+
+        CompoundTag variantsTag = new CompoundTag();
+        this.variants.forEach((id, history) -> {
+            if (!history.isEmpty()) {
+                variantsTag.put(id.toString(), history.save());
+            }
+        });
+        tag.put("variants", variantsTag);
+
+        if (this.homePos != null && this.homeDimension != null) {
+            tag.putString("homeDimension", this.homeDimension.location().toString());
+            tag.putIntArray("homePos",
+                    new int[]{this.homePos.getX(), this.homePos.getY(), this.homePos.getZ()});
+        }
+        return tag;
+    }
+
+    public static NavigationState load(CompoundTag tag) {
+        NavigationState state = new NavigationState();
+        state.namespace = tag.getString("namespace");
+        state.index = tag.getInt("index");
+        state.radius = tag.contains("radius") ? tag.getInt("radius") : DEFAULT_RADIUS;
+        // contains() guards rather than getBoolean's silent false, so a tag written before these
+        // existed keeps the defaults instead of flipping both off.
+        state.unexploredOnly = !tag.contains("unexploredOnly") || tag.getBoolean("unexploredOnly");
+        state.autoDimension = !tag.contains("autoDimension") || tag.getBoolean("autoDimension");
+
+        ListTag visitedList = tag.getList("visited", Tag.TAG_STRING);
+        for (int i = 0; i < visitedList.size(); i++) {
+            ResourceLocation id = ResourceLocation.tryParse(visitedList.getString(i));
+            if (id != null) {
+                state.visited.add(id);
+            }
+        }
+
+        CompoundTag variantsTag = tag.getCompound("variants");
+        for (String key : variantsTag.getAllKeys()) {
+            ResourceLocation id = ResourceLocation.tryParse(key);
+            if (id != null) {
+                state.variants.put(id, VariantHistory.load(variantsTag.getCompound(key)));
+            }
+        }
+
+        int[] home = tag.getIntArray("homePos");
+        ResourceLocation homeDimension = ResourceLocation.tryParse(tag.getString("homeDimension"));
+        if (home.length == 3 && homeDimension != null) {
+            state.homePos = new BlockPos(home[0], home[1], home[2]);
+            state.homeDimension = ResourceKey.create(Registries.DIMENSION, homeDimension);
+        }
+
+        // structures stays empty on purpose — resolve() rebuilds it from the live registry.
+        return state;
     }
 }

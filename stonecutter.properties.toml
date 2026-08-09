@@ -35,3 +35,5 @@ mod.java = "21"
 [fabric."1.21.1"]
 mod.mc_compat = "~1.21.1"
 deps.fabric_api = "0.116.14+1.21.1"
+# compileOnly — Mod Menu is never bundled, and the mod runs fine without it.
+deps.modmenu = "11.0.3"

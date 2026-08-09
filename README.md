@@ -51,6 +51,24 @@ On top of that, LocateNext keeps a per-structure history of everywhere it has se
 
 Turn it off with `/ln fresh false` to get plain vanilla "nearest wins" behaviour.
 
+## It remembers where you were
+
+Your selected mod, your place in its list, your settings and every instance you've been sent to are
+saved into the world, so they survive quitting to title and restarting the game. Pick a mod once
+and pick up where you left off next session.
+
+It's stored per-world rather than globally, because most of what it holds only means something in
+one save: the variant histories are literal block positions, and the fresh-only mode they rely on
+is backed by that world's structure references.
+
+Two consequences worth knowing:
+
+- The structure *list* is rebuilt from the registry on load rather than stored, so adding or
+  removing a structure mod between sessions is handled — your position is clamped to the new list,
+  and a selection whose mod is gone is dropped rather than left dangling.
+- Like all world data, it's written when the world saves. A hard crash can lose changes since the
+  last autosave; `/save-all` forces it.
+
 ## Commands
 
 `/locatenext`, aliased to `/ln`. Requires permission level 2.
@@ -71,6 +89,9 @@ Turn it off with `/ln fresh false` to get plain vanilla "nearest wins" behaviour
 | `fresh <true\|false>` | Only land on instances nobody has been sent to. Default **true** |
 | `autodim <true\|false>` | Hop to whichever dimension a structure belongs to. Default **true** |
 | `clear` | Drop the selection, history and saved home position |
+
+Mod Menu's config button opens the picker, if you have Mod Menu installed. It's a `compileOnly`
+dependency, so nothing is bundled and the mod runs fine without it.
 
 ## What it handles for you
 

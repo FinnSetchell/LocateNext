@@ -64,7 +64,8 @@ public final class LocateNextFabric implements ModInitializer {
             }
         });
 
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> NavigationManager.clearAll());
+        // No SERVER_STOPPED cleanup: state lives in the world save now, and dropping it on stop
+        // would defeat the point of saving it.
 
         LocateNext.LOGGER.info("LocateNext ready — /locatenext mod <modid>, then arrow keys.");
     }
@@ -79,15 +80,15 @@ public final class LocateNextFabric implements ModInitializer {
         if (!state.hasSelection()) {
             return;
         }
-        String namespace = state.namespace();
-        int index = state.index();
-        var structures = StructureCatalog.byNamespace(player.server).get(namespace);
+        var structures = StructureCatalog.byNamespace(player.server).get(state.namespace());
         if (structures == null || structures.isEmpty()) {
             state.clear();
         } else {
-            state.select(namespace, structures);
-            state.setIndex(Math.min(index, structures.size() - 1));
+            // reselect, not select: a reload changes what's registered, not where the player has
+            // already been, so visited marks and instance history are kept.
+            state.reselect(structures);
         }
+        NavigationManager.markDirty(player);
         NavigationManager.syncState(player);
     }
 }

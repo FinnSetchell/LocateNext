@@ -110,6 +110,7 @@ public final class LocateNextCommand {
                     NavigationState state = NavigationManager.state(player);
                     state.clear();
                     state.clearHome();
+                    NavigationManager.markDirty(player);
                     NavigationManager.syncState(player);
                     Msg.info(player, Msg.dim("Selection and saved home cleared."));
                 })));
@@ -129,7 +130,10 @@ public final class LocateNextCommand {
     private static com.mojang.brigadier.Command<CommandSourceStack> setting(
             BiConsumer<ServerPlayer, CommandContext<CommandSourceStack>> action) {
         return context -> {
-            action.accept(context.getSource().getPlayerOrException(), context);
+            ServerPlayer player = context.getSource().getPlayerOrException();
+            action.accept(player, context);
+            // Every branch built with this helper changes a persisted setting.
+            NavigationManager.markDirty(player);
             return 1;
         };
     }

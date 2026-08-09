@@ -7,7 +7,13 @@
     "authors": [
         "${author}"
     ],
+    "contact": {
+        "homepage": "https://github.com/FinnSetchell/LocateNext",
+        "sources": "https://github.com/FinnSetchell/LocateNext",
+        "issues": "https://github.com/FinnSetchell/LocateNext/issues"
+    },
     "license": "${license}",
+    "icon": "assets/locatenext/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
@@ -15,6 +21,9 @@
         ],
         "client": [
             "com.finndog.locatenext.fabric.LocateNextFabricClient"
+        ],
+        "modmenu": [
+            "com.finndog.locatenext.client.LocateNextModMenu"
         ]
     },
     "depends": {

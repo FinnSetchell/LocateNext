@@ -19,6 +19,14 @@ dependencies {
 
     modImplementation("net.fabricmc:fabric-loader:${sc.properties.get<String>("deps.fabric_loader")}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${sc.properties.get<String>("deps.fabric_api")}")
+
+    // Only the ModMenuApi interface is needed, and Fabric loads that entrypoint solely when Mod
+    // Menu asks for it — so this stays off both the runtime classpath and the shipped jar.
+    modCompileOnly("com.terraformersmc:modmenu:${sc.properties.get<String>("deps.modmenu")}")
+}
+
+repositories {
+    maven("https://maven.terraformersmc.com/releases") { name = "TerraformersMC" }
 }
 
 loom {
