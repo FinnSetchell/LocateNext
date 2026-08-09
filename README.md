@@ -8,7 +8,7 @@ Fabric, Minecraft 1.21.1, built with Stonecutter.
 
 ## Usage
 
-1. `/locatenext mod moogsvoyagerstructures` — or press `\` and pick it from the menu.
+1. `/locatenext mod [modid]` — or press `\` and pick it from the menu.
 2. Arrow keys drive everything:
 
 | Key | Does |
@@ -26,7 +26,7 @@ Each jump reports the index, the structure id, the landing coordinates, the dist
 and how long the search took:
 
 ```
-[LN] 3/17  moogsvoyagerstructures:big_bridge  variant 2/3
+[LN] 3/17  [modid]:example_structure  variant 2/3
 [LN]   at 1234, 78, -5600   3,412 blocks SE   in 412 ms
 [◀ prev] [next ▶]  [↑ new] [↓ back]  [home]
 ```
@@ -134,6 +134,26 @@ referenced as a side effect of surveying them would poison later navigation.
 
 Output lands in `versions/1.21.1-fabric/build/libs/`. `./gradlew buildAndCollect` collects every
 node's jar into `build/libs/{version}/`.
+
+## Releasing
+
+Tags are `<version>-<label>`, e.g. `1.0.0-fabric`. Pushing one builds the mod and cuts a GitHub
+release with the jar attached.
+
+```bash
+git tag 1.0.0-fabric && git push origin 1.0.0-fabric
+```
+
+Before tagging, make sure `mod.version` in `stonecutter.properties.toml` and the `## [version]`
+section in `CHANGELOG.md` both match — the workflow hard-fails on either being stale rather than
+shipping the wrong thing quietly.
+
+This is deliberately *not* the release-actions v2 system the other mods use. v2 requires at least
+one storefront project (`platforms` is mandatory in its manifest) and cuts the GitHub release
+downstream of the CurseForge/Modrinth upload, so it cannot do GitHub-only. Everything here is
+shaped like v2 — same tag form, same jar naming, same changelog rules — so moving over once this
+mod has storefront projects means deleting `.github/workflows/release.yml`, adding the three thin
+caller workflows and a `moogs-publish.yml`. Tags cut now stay valid.
 
 ### Adding a Minecraft version
 

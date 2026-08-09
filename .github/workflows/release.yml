@@ -1,0 +1,175 @@
+name: Release
+
+# Standalone GitHub-release-only publishing.
+#
+# The release-actions v2 system cannot do this: its manifest requires at least one storefront
+# project (`platforms` is mandatory, with a real projectId and slug) and the GitHub release is
+# cut inside publish-v2.yml, downstream of the CurseForge/Modrinth upload. `distribution: github`
+# exists but only for config-pack artifacts, never a mod jar.
+#
+# So this file stands in until LocateNext has storefront projects. Everything it does is
+# deliberately shaped like v2 so the swap is mechanical rather than a re-think:
+#
+#   * the tag glob and tag shape are v2's (`<version>-<tagLabel>`, e.g. `1.0.0-fabric`), so
+#     tags already cut here stay meaningful afterwards;
+#   * the jar name is v2's ({ModName}-{loader}-{mc}-{version});
+#   * the changelog is anchored-matched the way v2/lib/changelog.py does it, including refusing
+#     an unedited placeholder — the trap that lets a cutover look green and then die at the
+#     real publish;
+#   * a tag whose version disagrees with the build's is a hard failure, as it is in v2.
+#
+# Replacing it later means deleting this file and adding the three thin callers.
+
+on:
+  push:
+    tags:
+      - '*.*.*-*'
+      - '*.*.*-alpha.*-*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout at tag
+        uses: actions/checkout@v4
+
+      - name: Read the tag
+        id: tag
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          # Split on the LAST hyphen: the label is one trailing segment, and the version
+          # itself may contain hyphens (1.0.0-alpha.1-fabric -> 1.0.0-alpha.1 + fabric).
+          VERSION="${TAG%-*}"
+          LABEL="${TAG##*-}"
+          if [ -z "$VERSION" ] || [ -z "$LABEL" ]; then
+            echo "::error::tag '$TAG' is not <version>-<label>, e.g. 1.0.0-fabric"
+            exit 1
+          fi
+          echo "tag=$TAG"         >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "label=$LABEL"     >> "$GITHUB_OUTPUT"
+          case "$VERSION" in
+            *alpha*|*beta*|*rc*) echo "prerelease=true"  >> "$GITHUB_OUTPUT" ;;
+            *)                   echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+          echo "Releasing $VERSION ($LABEL)"
+
+      - name: Check the build agrees with the tag
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          set -euo pipefail
+          # A stale mod.version silently ships the previous version's jar under a new tag.
+          DECLARED=$(sed -n 's/^mod\.version[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' \
+                     stonecutter.properties.toml | head -1)
+          if [ -z "$DECLARED" ]; then
+            echo "::error::could not read mod.version from stonecutter.properties.toml"
+            exit 1
+          fi
+          if [ "$DECLARED" != "$VERSION" ]; then
+            echo "::error::tag says $VERSION but stonecutter.properties.toml says $DECLARED — bump one of them and re-tag"
+            exit 1
+          fi
+
+      - name: Extract the changelog entry
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Anchored on the whole header, so 1.0.0 cannot match '## [1.0.01]' or
+          # '## [1.0.0-alpha.1]' — the v1 bug v2/lib/changelog.py was written to fix.
+          awk -v ver="$VERSION" '
+            $0 == "## [" ver "]" || index($0, "## [" ver "] ") == 1 { grab = 1; next }
+            grab && /^## \[/ { exit }
+            grab && $0 == "---" { exit }
+            grab { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "::error::no changelog entry for $VERSION in CHANGELOG.md — add a '## [$VERSION] - $(date -u +%F)' section and re-tag"
+            exit 1
+          fi
+          # An unedited stub would ship to players as the release notes.
+          if grep -qiE '_pending|replace this line|describe the changes here' notes.md; then
+            echo "::error::the changelog entry for $VERSION is still an unedited placeholder"
+            exit 1
+          fi
+          echo "--- release notes ---"; cat notes.md
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          # The JVM that RUNS Gradle. Stonecutter 0.9.x refuses to resolve below 21, which is
+          # a separate number from a node's bytecode target (mod.java in the toml).
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew build
+
+      - name: Collect jars
+        id: jars
+        run: |
+          set -euo pipefail
+          mkdir -p staging
+          # Stonecutter puts each node's output under its own versions/<node>/build/libs.
+          # Companion jars are excluded the way v2's reconcile.locate_file does it.
+          found=0
+          for jar in versions/*/build/libs/*.jar; do
+            [ -e "$jar" ] || continue
+            case "$(basename "$jar")" in
+              *-sources.jar|*-javadoc.jar|*-dev.jar|*-slim.jar) continue ;;
+            esac
+            cp "$jar" staging/
+            found=$((found + 1))
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "::error::no jars found under versions/*/build/libs"
+            exit 1
+          fi
+          echo "Staged $found jar(s):"
+          ls -la staging/
+
+      - name: Verify the jars carry the tag's version
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          set -euo pipefail
+          for jar in staging/*.jar; do
+            case "$(basename "$jar")" in
+              *"$VERSION"*) ;;
+              *) echo "::error::$(basename "$jar") does not contain version $VERSION"; exit 1 ;;
+            esac
+          done
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          VERSION: ${{ steps.tag.outputs.version }}
+          PRERELEASE: ${{ steps.tag.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          FLAGS=""
+          [ "$PRERELEASE" = "true" ] && FLAGS="--prerelease"
+          # Re-runnable: delete and recreate rather than failing on an existing release.
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG exists — replacing it"
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes
+          fi
+          # shellcheck disable=SC2086
+          gh release create "$TAG" staging/*.jar \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "LocateNext $VERSION" \
+            --notes-file notes.md \
+            $FLAGS
+          echo "Released $TAG"
