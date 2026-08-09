@@ -18,7 +18,13 @@ mod.description = "A structure-testing dev tool: pick a mod, then arrow-key your
 # From 26.1 Minecraft ships unobfuscated and the plugin swaps to plain fabric-loom automatically.
 loomx.loom_version = "1.17-SNAPSHOT"
 
+# The loader the dev environment runs against.
 deps.fabric_loader = "0.19.3"
+# The floor declared in fabric.mod.json, which is a different question — it has to be low enough
+# for the launcher instances the jar gets dropped into. Keeping these separate is deliberate:
+# declaring the dev loader version silently locked the mod out of a CurseForge instance pinned to
+# 0.19.2. Nothing here needs more than the 1.20.5-era payload API, so the floor sits well below.
+mod.loader_min = "0.16.0"
 
 # ------------------------------------------------------------------ 1.21.1 (Java 21)
 ["1.21.1"]

@@ -66,7 +66,8 @@ tasks {
             "author" to sc.properties.get<String>("mod.author"),
             "license" to sc.properties.get<String>("mod.license"),
             "minecraft" to sc.properties.get<String>("mod.mc_compat"),
-            "loader" to sc.properties.get<String>("deps.fabric_loader"),
+            // Declared floor, not the dev loader — see the note in stonecutter.properties.toml.
+            "loader" to sc.properties.get<String>("mod.loader_min"),
             "pack_format" to sc.properties.get<String>("mod.pack_format"),
             "java" to requiredJava.majorVersion,
         )
