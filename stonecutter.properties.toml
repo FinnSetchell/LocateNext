@@ -1,0 +1,31 @@
+# Mod metadata and per-version dependencies.
+# Gradle's own launch options stay in gradle.properties — they cannot be read from here.
+#
+# Tables are selected per node by `properties { tags(version, loader) }` in stonecutter.gradle.kts,
+# so `deps.fabric_api` resolves to whatever the matching [fabric."<version>"] table declares.
+
+mod.id = "locatenext"
+mod.name = "LocateNext"
+# Artifact stem for the fleet filename convention {ModName}-{loader}-{mc}-{version}.jar.
+mod.archive_name = "LocateNext"
+mod.group = "com.finndog.locatenext"
+mod.version = "1.0.0"
+mod.author = "FinnSetchell"
+mod.license = "MIT"
+mod.description = "A structure-testing dev tool: pick a mod, then arrow-key your way through every structure it adds, locating and teleporting to each in turn."
+
+# Loom variant for the obfuscated (pre-26.1) versions, applied by dev.kikugie.loom-back-compat.
+# From 26.1 Minecraft ships unobfuscated and the plugin swaps to plain fabric-loom automatically.
+loomx.loom_version = "1.17-SNAPSHOT"
+
+deps.fabric_loader = "0.19.3"
+
+# ------------------------------------------------------------------ 1.21.1 (Java 21)
+["1.21.1"]
+mod.mc_releases = ["1.21", "1.21.1"]
+mod.pack_format = "34"
+mod.java = "21"
+
+[fabric."1.21.1"]
+mod.mc_compat = "~1.21.1"
+deps.fabric_api = "0.116.14+1.21.1"

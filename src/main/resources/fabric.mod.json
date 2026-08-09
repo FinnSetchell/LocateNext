@@ -1,0 +1,26 @@
+{
+    "schemaVersion": 1,
+    "id": "${id}",
+    "version": "${version}",
+    "name": "${name}",
+    "description": "${description}",
+    "authors": [
+        "${author}"
+    ],
+    "license": "${license}",
+    "environment": "*",
+    "entrypoints": {
+        "main": [
+            "com.finndog.locatenext.fabric.LocateNextFabric"
+        ],
+        "client": [
+            "com.finndog.locatenext.fabric.LocateNextFabricClient"
+        ]
+    },
+    "depends": {
+        "fabricloader": ">=${loader}",
+        "fabric-api": "*",
+        "minecraft": "${minecraft}",
+        "java": ">=${java}"
+    }
+}

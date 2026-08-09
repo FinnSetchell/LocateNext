@@ -1,0 +1,15 @@
+{
+  "key.categories.locatenext": "LocateNext",
+  "key.locatenext.next": "Next structure",
+  "key.locatenext.prev": "Previous structure",
+  "key.locatenext.variant_next": "New instance of this structure",
+  "key.locatenext.variant_prev": "Previous instance of this structure",
+  "key.locatenext.screen": "Open LocateNext menu",
+
+  "locatenext.screen.title": "LocateNext",
+  "locatenext.screen.mods": "Mods",
+  "locatenext.screen.structures": "Structures",
+  "locatenext.screen.search": "Search...",
+  "locatenext.screen.no_mod": "Select a mod on the left",
+  "locatenext.screen.empty": "No structures known — join a world first"
+}
