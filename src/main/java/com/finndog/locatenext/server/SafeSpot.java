@@ -1,8 +1,11 @@
 package com.finndog.locatenext.server;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
@@ -21,6 +24,14 @@ public final class SafeSpot {
         int x = pos.getX();
         int z = pos.getZ();
 
+        // The column has to be generated before it can be measured. A locate search only takes
+        // chunks as far as STRUCTURE_STARTS, and LevelReader#getHeight quietly answers
+        // minBuildHeight for a chunk that isn't loaded rather than loading it — so without this
+        // every overworld landing comes back at bedrock.
+        ChunkAccess chunk = level.getChunk(
+                SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z),
+                ChunkStatus.FULL, true);
+
         if (level.dimensionType().hasCeiling()) {
             int scanned = scanUnderCeiling(level, x, z);
             if (scanned != Integer.MIN_VALUE) {
@@ -28,8 +39,7 @@ public final class SafeSpot {
             }
         }
 
-        // getHeight loads the chunk to full, so this is a real answer rather than a guess.
-        int surface = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        int surface = chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15) + 1;
         return new BlockPos(x, Math.max(surface, level.getMinBuildHeight() + 1), z);
     }
 

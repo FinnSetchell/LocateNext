@@ -382,9 +382,8 @@ public final class NavigationManager {
         }
         long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000L;
 
-        reportHeader(player, state, id, history);
-
         if (hit == null) {
+            reportHeader(player, state, id, history);
             Msg.info(player, Component.empty()
                     .append(Msg.dim("  "))
                     .append(Component.literal(sawAnything
@@ -407,7 +406,9 @@ public final class NavigationManager {
         teleport(player, level, landing);
         state.markVisited(id);
 
-        // Re-print the header now the variant counter has moved.
+        // Only now, so the header's variant counter reflects the instance just added.
+        reportHeader(player, state, id, history);
+
         MutableComponent line = Component.empty()
                 .append(Msg.dim("  at ")).append(Msg.coords(landing))
                 .append(Msg.dim("  "))

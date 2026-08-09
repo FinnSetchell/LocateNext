@@ -97,6 +97,9 @@ referenced as a side effect of surveying them would poison later navigation.
   chunk source and isn't safe to run off-thread, so this is deliberate.
 - Fresh-only mode is slower than plain `/locate`: it has to generate chunks to `STRUCTURE_STARTS`
   to know whether an instance has been referenced. That's the price of never landing twice.
+- The first jump into untouched terrain also has to generate the landing chunk in full before it
+  can work out a surface height — measured at ~7 s in testing. Later jumps in the same area are
+  near-instant (0–300 ms), and revisiting an instance you've already been to never searches at all.
 - Arrow keys are unbound in vanilla, so nothing is stolen. They're rebindable under **LocateNext**
   in Controls, and they only fire when no screen is open.
 - Works on a dedicated server too, as long as the client has the mod. Without it, commands still
