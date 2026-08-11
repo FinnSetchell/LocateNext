@@ -1,9 +1,19 @@
 package com.finndog.locatenext.server;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import com.finndog.locatenext.LocateNext;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
+//? if >=1.21.5 {
+/*import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.saveddata.SavedDataType;
+*///?} else {
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+//?}
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,16 +26,38 @@ import java.util.UUID;
  * meaningful in one world: the variant histories are literal block positions, and the
  * fresh-only mode they lean on is backed by that world's structure references. Carrying them into
  * a different save would point you at coordinates that mean nothing there.
+ *
+ * <p>Serialization is one {@link Codec} for every version. 1.21.5 replaced {@code SavedData}'s
+ * {@code save(CompoundTag)} with a {@code SavedDataType} carrying a Codec, so the older path
+ * simply runs the same Codec through {@code NbtOps}. Only the wiring below is version-specific;
+ * the actual shape of the saved data is declared once, in {@link NavigationState#CODEC}.
  */
 public final class LocateNextSavedData extends SavedData {
 
     private static final String FILE_ID = "locatenext_navigation";
+
+    public static final Codec<LocateNextSavedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.unboundedMap(UUIDUtil.STRING_CODEC, NavigationState.CODEC)
+                    .optionalFieldOf("players", Map.of()).forGetter(data -> data.states)
+    ).apply(instance, LocateNextSavedData::new));
 
     private final Map<UUID, NavigationState> states = new HashMap<>();
 
     private LocateNextSavedData() {
     }
 
+    private LocateNextSavedData(Map<UUID, NavigationState> states) {
+        this.states.putAll(states);
+    }
+
+    //? if >=1.21.5 {
+    /*private static final SavedDataType<LocateNextSavedData> TYPE = new SavedDataType<>(
+            LocateNext.id(FILE_ID), LocateNextSavedData::new, CODEC, DataFixTypes.LEVEL);
+
+    public static LocateNextSavedData get(MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(TYPE);
+    }
+    *///?} else {
     public static LocateNextSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(factory(), FILE_ID);
     }
@@ -37,31 +69,19 @@ public final class LocateNextSavedData extends SavedData {
     }
 
     private static LocateNextSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
-        LocateNextSavedData data = new LocateNextSavedData();
-        CompoundTag players = tag.getCompound("players");
-        for (String key : players.getAllKeys()) {
-            try {
-                data.states.put(UUID.fromString(key), NavigationState.load(players.getCompound(key)));
-            } catch (IllegalArgumentException malformedUuid) {
-                // A key that isn't a UUID can only come from a hand-edited file; drop that entry
-                // rather than fail the whole load and lose everyone else's state.
-                LocateNextSavedData.warn(key);
-            }
-        }
-        return data;
-    }
-
-    private static void warn(String key) {
-        com.finndog.locatenext.LocateNext.LOGGER.warn("Ignoring malformed player key '{}' in {}", key, FILE_ID);
+        return CODEC.parse(NbtOps.INSTANCE, tag)
+                .resultOrPartial(error -> LocateNext.LOGGER.error("Discarding unreadable {}: {}", FILE_ID, error))
+                .orElseGet(LocateNextSavedData::new);
     }
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
-        CompoundTag players = new CompoundTag();
-        this.states.forEach((uuid, state) -> players.put(uuid.toString(), state.save()));
-        tag.put("players", players);
+        CODEC.encodeStart(NbtOps.INSTANCE, this)
+                .resultOrPartial(error -> LocateNext.LOGGER.error("Failed to write {}: {}", FILE_ID, error))
+                .ifPresent(encoded -> tag.merge((CompoundTag) encoded));
         return tag;
     }
+    //?}
 
     public NavigationState state(UUID uuid) {
         return this.states.computeIfAbsent(uuid, ignored -> new NavigationState());

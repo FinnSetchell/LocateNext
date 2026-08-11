@@ -12,6 +12,12 @@ base.archivesName = "${sc.properties.get<String>("mod.archive_name")}-fabric-${s
 // Declared per version in stonecutter.properties.toml.
 val requiredJava: JavaVersion = JavaVersion.toVersion(sc.properties.get<String>("mod.java"))
 
+// Blank means "no Mod Menu on this version" — it drops both the dependency and the entrypoint,
+// so the shipped fabric.mod.json never names a class that isn't in the jar.
+val modmenuVersion: String = sc.properties.get<String>("deps.modmenu")
+val modmenuEntrypoint: String =
+    if (modmenuVersion.isBlank()) "" else "\"com.finndog.locatenext.client.LocateNextModMenu\""
+
 dependencies {
     minecraft("com.mojang:minecraft:${sc.current.version}")
     // No-op on the un-obfuscated versions; applies Mojang mappings on the obfuscated ones.
@@ -22,7 +28,10 @@ dependencies {
 
     // Only the ModMenuApi interface is needed, and Fabric loads that entrypoint solely when Mod
     // Menu asks for it — so this stays off both the runtime classpath and the shipped jar.
-    modCompileOnly("com.terraformersmc:modmenu:${sc.properties.get<String>("deps.modmenu")}")
+    // Blank on versions with no usable Mod Menu artifact; see stonecutter.properties.toml.
+    if (modmenuVersion.isNotBlank()) {
+        modCompileOnly("com.terraformersmc:modmenu:$modmenuVersion")
+    }
 }
 
 repositories {
@@ -78,6 +87,7 @@ tasks {
             "loader" to sc.properties.get<String>("mod.loader_min"),
             "pack_format" to sc.properties.get<String>("mod.pack_format"),
             "java" to requiredJava.majorVersion,
+            "modmenu_entrypoint" to modmenuEntrypoint,
         )
         props.forEach { (k, v) -> inputs.property(k, v) }
 

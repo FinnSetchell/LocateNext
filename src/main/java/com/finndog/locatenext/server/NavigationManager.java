@@ -1,5 +1,6 @@
 package com.finndog.locatenext.server;
 
+import com.finndog.locatenext.LocateNext;
 import com.finndog.locatenext.net.NavStatePayload;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.ChatFormatting;
@@ -66,8 +67,8 @@ public final class NavigationManager {
      * the structure list against the registry as it is now.
      */
     public static NavigationState state(ServerPlayer player) {
-        NavigationState state = LocateNextSavedData.get(player.server).state(player.getUUID());
-        state.resolve(player.server);
+        NavigationState state = LocateNextSavedData.get(Players.server(player)).state(player.getUUID());
+        state.resolve(Players.server(player));
         return state;
     }
 
@@ -77,14 +78,14 @@ public final class NavigationManager {
      * silently lost on restart.
      */
     public static void markDirty(ServerPlayer player) {
-        LocateNextSavedData.get(player.server).setDirty();
+        LocateNextSavedData.get(Players.server(player)).setDirty();
     }
 
     // ------------------------------------------------------------------ selection
 
     /** @return false if the namespace has no structures (message already sent). */
     public static boolean selectMod(ServerPlayer player, String namespace) {
-        Map<String, List<ResourceLocation>> catalog = StructureCatalog.byNamespace(player.server);
+        Map<String, List<ResourceLocation>> catalog = StructureCatalog.byNamespace(Players.server(player));
         List<ResourceLocation> structures = catalog.get(namespace);
         if (structures == null || structures.isEmpty()) {
             Msg.error(player, "No structures registered under '" + namespace + "'.");
@@ -112,7 +113,7 @@ public final class NavigationManager {
     }
 
     public static void listMods(ServerPlayer player) {
-        Map<String, List<ResourceLocation>> catalog = StructureCatalog.byNamespace(player.server);
+        Map<String, List<ResourceLocation>> catalog = StructureCatalog.byNamespace(Players.server(player));
         Msg.info(player, Msg.dim(catalog.size() + " namespaces with structures:"));
         catalog.forEach((namespace, structures) -> Msg.plain(player, Component.empty()
                 .append(Msg.button("  " + namespace, "/locatenext mod " + namespace, ChatFormatting.YELLOW))
@@ -165,7 +166,7 @@ public final class NavigationManager {
             Msg.plain(player, Component.empty()
                     .append(Msg.dim(String.format(" %s%2d. ", current ? "▶" : " ", i + 1)))
                     .append(Msg.coords(landing.landing()))
-                    .append(Msg.dim("  " + landing.dimension().location().getPath())));
+                    .append(Msg.dim("  " + LocateNext.keyId(landing.dimension()).getPath())));
         }
     }
 
@@ -244,16 +245,16 @@ public final class NavigationManager {
             Msg.error(player, "No saved position — it's recorded on your first jump.");
             return;
         }
-        ServerLevel level = player.server.getLevel(dimension);
+        ServerLevel level = Players.server(player).getLevel(dimension);
         if (level == null) {
-            Msg.error(player, "Saved dimension " + dimension.location() + " is no longer loaded.");
+            Msg.error(player, "Saved dimension " + LocateNext.keyId(dimension) + " is no longer loaded.");
             return;
         }
         teleport(player, level, home);
         Msg.info(player, Component.empty()
                 .append(Msg.dim("Returned to "))
                 .append(Msg.coords(home))
-                .append(Msg.dim(" in " + dimension.location().getPath())));
+                .append(Msg.dim(" in " + LocateNext.keyId(dimension).getPath())));
     }
 
     private static boolean requireSelection(ServerPlayer player, NavigationState state) {
@@ -321,12 +322,12 @@ public final class NavigationManager {
     /** Teleport to an instance already in the history — no search, so it's instant. */
     private static void revisit(ServerPlayer player, NavigationState state, ResourceLocation id,
                                 VariantHistory history, VariantHistory.Landing landing) {
-        ServerLevel level = player.server.getLevel(landing.dimension());
+        ServerLevel level = Players.server(player).getLevel(landing.dimension());
         if (level == null) {
-            Msg.error(player, "Dimension " + landing.dimension().location() + " is no longer loaded.");
+            Msg.error(player, "Dimension " + LocateNext.keyId(landing.dimension()) + " is no longer loaded.");
             return;
         }
-        state.rememberHome(player.serverLevel().dimension(), player.blockPosition());
+        state.rememberHome(Players.level(player).dimension(), player.blockPosition());
         teleport(player, level, landing.landing());
         state.markVisited(id);
 
@@ -339,16 +340,16 @@ public final class NavigationManager {
 
     private static void search(ServerPlayer player, NavigationState state, ResourceLocation id,
                                VariantHistory history, boolean wantNew) {
-        MinecraftServer server = player.server;
+        MinecraftServer server = Players.server(player);
         Registry<Structure> registry = StructureCatalog.registry(server);
         Optional<Holder.Reference<Structure>> holder =
-                registry.getHolder(ResourceKey.create(Registries.STRUCTURE, id));
+                StructureCatalog.holder(registry, ResourceKey.create(Registries.STRUCTURE, id));
         if (holder.isEmpty()) {
             Msg.error(player, "Structure " + id + " vanished from the registry (datapack reload?).");
             return;
         }
 
-        ServerLevel origin = player.serverLevel();
+        ServerLevel origin = Players.level(player);
         Optional<ServerLevel> target = state.autoDimension()
                 ? StructureCatalog.findLevelFor(server, origin, holder.get().value())
                 : StructureCatalog.canGenerateIn(origin, holder.get().value())
@@ -357,7 +358,7 @@ public final class NavigationManager {
         if (target.isEmpty()) {
             reportHeader(player, state, id, history);
             Msg.info(player, Msg.dim("  cannot generate in ")
-                    .append(Component.literal(origin.dimension().location().toString())
+                    .append(Component.literal(LocateNext.keyId(origin.dimension()).toString())
                             .withStyle(ChatFormatting.RED))
                     .append(Msg.dim(state.autoDimension()
                             ? " — or any other loaded dimension" : " (auto-dimension is off)")));
@@ -442,7 +443,7 @@ public final class NavigationManager {
             line.append(Msg.dim(" over " + (attempts + 1) + " searches"));
         }
         if (level != origin) {
-            line.append(Msg.dim("  → " + level.dimension().location().getPath()));
+            line.append(Msg.dim("  → " + LocateNext.keyId(level.dimension()).getPath()));
         }
         Msg.info(player, line);
         Msg.plain(player, Msg.navBar());
@@ -474,9 +475,9 @@ public final class NavigationManager {
             return;
         }
 
-        MinecraftServer server = player.server;
+        MinecraftServer server = Players.server(player);
         Registry<Structure> registry = StructureCatalog.registry(server);
-        ServerLevel origin = player.serverLevel();
+        ServerLevel origin = Players.level(player);
         BlockPos playerPos = player.blockPosition();
 
         Msg.info(player, Msg.dim("Sweeping " + state.size() + " structures at radius "
@@ -488,7 +489,7 @@ public final class NavigationManager {
 
         for (ResourceLocation id : state.structures()) {
             Optional<Holder.Reference<Structure>> holder =
-                    registry.getHolder(ResourceKey.create(Registries.STRUCTURE, id));
+                    StructureCatalog.holder(registry, ResourceKey.create(Registries.STRUCTURE, id));
             if (holder.isEmpty()) {
                 missing.add(id.getPath() + " (not in registry)");
                 continue;
@@ -520,7 +521,7 @@ public final class NavigationManager {
                         .append(Component.literal("  ✔ ").withStyle(ChatFormatting.GREEN))
                         .append(Msg.structure(id.getPath()))
                         .append(Msg.dim("  " + Msg.formatDistance(distance) + " blocks, " + ms + " ms"
-                                + (level != origin ? ", " + level.dimension().location().getPath() : ""))));
+                                + (level != origin ? ", " + LocateNext.keyId(level.dimension()).getPath() : ""))));
             }
         }
 
@@ -582,8 +583,14 @@ public final class NavigationManager {
 
     private static void teleport(ServerPlayer player, ServerLevel level, BlockPos pos) {
         player.fallDistance = 0.0F;
+        // 1.21.2 folded the relative-movement set and a camera flag into the signature.
+        //? if >=1.21.2 {
+        /*player.teleportTo(level, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5,
+                java.util.Set.of(), player.getYRot(), player.getXRot(), true);
+        *///?} else {
         player.teleportTo(level, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5,
                 player.getYRot(), player.getXRot());
+        //?}
         player.fallDistance = 0.0F;
     }
 

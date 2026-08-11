@@ -32,9 +32,9 @@ stonecutter {
             }
         }
 
-        // Only target for now. Adding e.g. `match("1.21.4", "fabric")` plus the matching tables in
-        // stonecutter.properties.toml is all a new version needs.
+        // 1.21.1 is the reference node — the one that has been tested in-game end to end.
         match("1.21.1", "fabric")
+        match("26.2", "fabric")
 
         vcsVersion = "1.21.1-fabric"
     }

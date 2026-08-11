@@ -36,13 +36,27 @@ public final class LocateNextCommand {
         LiteralCommandNode<CommandSourceStack> root = dispatcher.register(build());
         // `/ln` as a redirect rather than a second tree, so the two can never drift apart.
         dispatcher.register(Commands.literal("ln")
-                .requires(source -> source.hasPermission(PERMISSION_LEVEL))
+                .requires(operatorOnly())
                 .redirect(root));
     }
 
+    /**
+     * 26.1 replaced the numeric permission levels with a PermissionSet; LEVEL_GAMEMASTERS is the
+     * named equivalent of the old level 2.
+     */
+    //? if >=26.1 {
+    /*private static java.util.function.Predicate<CommandSourceStack> operatorOnly() {
+        return Commands.hasPermission(Commands.LEVEL_GAMEMASTERS);
+    }
+    *///?} else {
+    private static java.util.function.Predicate<CommandSourceStack> operatorOnly() {
+        return source -> source.hasPermission(PERMISSION_LEVEL);
+    }
+    //?}
+
     private static LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("locatenext")
-                .requires(source -> source.hasPermission(PERMISSION_LEVEL))
+                .requires(operatorOnly())
                 .executes(run(NavigationManager::status))
 
                 .then(Commands.literal("mod")

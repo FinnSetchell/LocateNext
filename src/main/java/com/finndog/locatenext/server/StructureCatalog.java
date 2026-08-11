@@ -3,6 +3,7 @@ package com.finndog.locatenext.server;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -30,8 +31,24 @@ public final class StructureCatalog {
     private StructureCatalog() {
     }
 
+    // 1.21.2 renamed the registry accessors: registryOrThrow -> lookupOrThrow and
+    // Registry#getHolder -> #get. Both are wrapped here so the call sites stay version-agnostic.
     public static Registry<Structure> registry(MinecraftServer server) {
+        //? if >=1.21.2 {
+        /*return server.registryAccess().lookupOrThrow(Registries.STRUCTURE);
+        *///?} else {
         return server.registryAccess().registryOrThrow(Registries.STRUCTURE);
+        //?}
+    }
+
+    /** The registry entry for a structure id, or empty when a datapack no longer defines it. */
+    public static Optional<Holder.Reference<Structure>> holder(Registry<Structure> registry,
+                                                               ResourceKey<Structure> key) {
+        //? if >=1.21.2 {
+        /*return registry.get(key);
+        *///?} else {
+        return registry.getHolder(key);
+        //?}
     }
 
     /** Namespace -> structure ids, both sorted, so index N always means the same structure. */

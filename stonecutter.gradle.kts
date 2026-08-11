@@ -26,4 +26,23 @@ stonecutter parameters {
     constants {
         match(loader, "fabric", "neoforge")
     }
+
+    replacements {
+        // 1.21.11 renamed ResourceLocation to Identifier. It appears in ~60 places across the
+        // catalog, payloads, persistence and client index, so it is handled as a whole-tree
+        // replacement rather than by wrapping every site in a conditional.
+        string(current.parsed >= "1.21.11") {
+            replace("ResourceLocation", "Identifier")
+        }
+
+        // Do NOT add a `regex(...)` replacement here, for any rename. The IntelliJ plugin's model
+        // requires `phase` and `identifier` on RegexReplacement, and Stonecutter 0.9.7's
+        // RegexReplacementSpec exposes neither, so the IDE gives up on the whole project model
+        // and version switching stops working.
+        //
+        // 26.1's GuiGraphics -> GuiGraphicsExtractor rename is deliberately NOT handled here
+        // either: replacements rewrite prose in comments as readily as code, and the name is a
+        // substring of unrelated accessors. It is covered by ordinary `//? if >=26.1`
+        // conditionals at its six sites in LocateNextScreen.
+    }
 }

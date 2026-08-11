@@ -1,7 +1,12 @@
 package com.finndog.locatenext.client;
 
 import com.finndog.locatenext.net.NavigatePayload;
+// 26.1's GUI rework renamed GuiGraphics; every method used here keeps its signature.
+//? if >=26.1 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*///?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -64,9 +69,42 @@ public final class LocateNextScreen extends Screen {
     @Override
     public void onClose() {
         if (this.minecraft != null) {
+            //? if >=26.1 {
+            /*this.minecraft.setScreenAndShow(this.parent);
+            *///?} else {
             this.minecraft.setScreen(this.parent);
+            //?}
         }
     }
+
+    // 26.1 renamed the drawing calls (drawString -> text, drawCenteredString -> centeredText)
+    // and nothing else about them. Routing every call site through these three helpers keeps the
+    // rename in one place instead of a conditional around each of the ten draws below.
+    //? if >=26.1 {
+    /*private void text(GuiGraphicsExtractor graphics, Component text, int x, int y, int colour) {
+        graphics.text(this.font, text, x, y, colour);
+    }
+
+    private void text(GuiGraphicsExtractor graphics, String text, int x, int y, int colour, boolean shadow) {
+        graphics.text(this.font, text, x, y, colour, shadow);
+    }
+
+    private void centeredText(GuiGraphicsExtractor graphics, Component text, int x, int y, int colour) {
+        graphics.centeredText(this.font, text, x, y, colour);
+    }
+    *///?} else {
+    private void text(GuiGraphics graphics, Component text, int x, int y, int colour) {
+        graphics.drawString(this.font, text, x, y, colour);
+    }
+
+    private void text(GuiGraphics graphics, String text, int x, int y, int colour, boolean shadow) {
+        graphics.drawString(this.font, text, x, y, colour, shadow);
+    }
+
+    private void centeredText(GuiGraphics graphics, Component text, int x, int y, int colour) {
+        graphics.drawCenteredString(this.font, text, x, y, colour);
+    }
+    //?}
 
     @Override
     protected void init() {
@@ -116,15 +154,22 @@ public final class LocateNextScreen extends Screen {
         this.onClose();
     }
 
+    // 26.1 moved screens to a build-a-render-state model: the per-frame entry point is
+    // extractRenderState rather than render. The body is unchanged — the extractor still takes
+    // the same immediate-style draw calls.
     @Override
+    //? if >=26.1 {
+    /*public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+    *///?} else {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
+    //?}
 
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 16, COLOUR_HEADER);
+        centeredText(graphics, this.title, this.width / 2, 16, COLOUR_HEADER);
 
         if (ClientStructureIndex.isEmpty()) {
-            graphics.drawCenteredString(this.font,
-                    Component.translatable("locatenext.screen.empty"),
+            centeredText(graphics, Component.translatable("locatenext.screen.empty"),
                     this.width / 2, this.height / 2, COLOUR_MUTED);
             return;
         }
@@ -135,12 +180,15 @@ public final class LocateNextScreen extends Screen {
 
     // ------------------------------------------------------------------ panels
 
+    //? if >=26.1 {
+    /*private void renderMods(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+    *///?} else {
     private void renderMods(GuiGraphics graphics, int mouseX, int mouseY) {
+    //?}
         this.visibleMods = filterMods();
         this.modScroll = clampScroll(this.modScroll, this.visibleMods.size());
 
-        graphics.drawString(this.font,
-                Component.translatable("locatenext.screen.mods")
+        text(graphics, Component.translatable("locatenext.screen.mods")
                         .append(Component.literal(" (" + this.visibleMods.size() + ")")),
                 this.panelLeft, 32, COLOUR_HEADER);
         drawPanel(graphics, this.panelLeft, this.leftWidth);
@@ -159,19 +207,23 @@ public final class LocateNextScreen extends Screen {
             int count = ClientStructureIndex.structures(namespace).size();
             String suffix = " (" + count + ")";
             String label = this.font.plainSubstrByWidth(namespace, this.leftWidth - 8 - this.font.width(suffix));
-            graphics.drawString(this.font, label, this.panelLeft + 4, y + 2,
+            text(graphics, label, this.panelLeft + 4, y + 2,
                     namespace.equals(selected) ? COLOUR_CURRENT : COLOUR_TEXT, false);
-            graphics.drawString(this.font, suffix,
+            text(graphics, suffix,
                     this.panelLeft + this.leftWidth - 4 - this.font.width(suffix), y + 2, COLOUR_MUTED, false);
         }
     }
 
+    //? if >=26.1 {
+    /*private void renderStructures(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+    *///?} else {
     private void renderStructures(GuiGraphics graphics, int mouseX, int mouseY) {
+    //?}
         String namespace = ClientStructureIndex.selectedNamespace();
         List<ResourceLocation> all = ClientStructureIndex.structures(namespace);
 
         if (all.isEmpty()) {
-            graphics.drawString(this.font, Component.translatable("locatenext.screen.no_mod"),
+            text(graphics, Component.translatable("locatenext.screen.no_mod"),
                     this.rightLeft, 32, COLOUR_MUTED);
             drawPanel(graphics, this.rightLeft, this.rightWidth);
             this.visibleStructures = List.of();
@@ -182,8 +234,7 @@ public final class LocateNextScreen extends Screen {
         this.structureScroll = clampScroll(this.structureScroll, this.visibleStructures.size());
 
         int current = ClientStructureIndex.selectedIndex();
-        graphics.drawString(this.font,
-                Component.literal(namespace + "  ")
+        text(graphics, Component.literal(namespace + "  ")
                         .append(Component.literal((current + 1) + "/" + all.size())),
                 this.rightLeft, 32, COLOUR_HEADER);
         drawPanel(graphics, this.rightLeft, this.rightWidth);
@@ -199,20 +250,28 @@ public final class LocateNextScreen extends Screen {
             highlight(graphics, this.rightLeft, this.rightWidth, y, hovered, index == current);
 
             String number = (index + 1) + ".";
-            graphics.drawString(this.font, number, this.rightLeft + 4, y + 2, COLOUR_MUTED, false);
+            text(graphics, number, this.rightLeft + 4, y + 2, COLOUR_MUTED, false);
             int textX = this.rightLeft + 8 + this.font.width("999.");
             String label = this.font.plainSubstrByWidth(
                     all.get(index).getPath(), this.rightLeft + this.rightWidth - 4 - textX);
-            graphics.drawString(this.font, label, textX, y + 2,
+            text(graphics, label, textX, y + 2,
                     index == current ? COLOUR_CURRENT : COLOUR_TEXT, false);
         }
     }
 
+    //? if >=26.1 {
+    /*private void drawPanel(GuiGraphicsExtractor graphics, int x, int width) {
+    *///?} else {
     private void drawPanel(GuiGraphics graphics, int x, int width) {
+    //?}
         graphics.fill(x, this.listTop - 2, x + width, this.listTop + this.visibleRows * ROW_HEIGHT, COLOUR_PANEL);
     }
 
+    //? if >=26.1 {
+    /*private void highlight(GuiGraphicsExtractor graphics, int x, int width, int y, boolean hovered, boolean selected) {
+    *///?} else {
     private void highlight(GuiGraphics graphics, int x, int width, int y, boolean hovered, boolean selected) {
+    //?}
         if (selected) {
             graphics.fill(x, y, x + width, y + ROW_HEIGHT, COLOUR_ROW_SELECTED);
         }
@@ -223,6 +282,21 @@ public final class LocateNextScreen extends Screen {
 
     // ------------------------------------------------------------------ input
 
+    // 26.1 replaced the (x, y, button) triple with a MouseButtonEvent carrying the same values
+    // plus a "double click" flag. Only the signature and the accessors differ; the body below is
+    // shared, so it reads the three values into locals and continues unchanged.
+    //? if >=26.1 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        if (super.mouseClicked(event, doubleClick)) {
+            return true;
+        }
+        double mouseX = event.x();
+        double mouseY = event.y();
+        if (event.button() != 0) {
+            return false;
+        }
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) {
@@ -231,6 +305,7 @@ public final class LocateNextScreen extends Screen {
         if (button != 0) {
             return false;
         }
+    //?}
 
         int modRow = rowAt(mouseX, mouseY, this.panelLeft, this.leftWidth, this.modScroll, this.visibleMods.size());
         if (modRow >= 0) {

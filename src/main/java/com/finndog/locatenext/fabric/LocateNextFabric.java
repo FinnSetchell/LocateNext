@@ -7,6 +7,7 @@ import com.finndog.locatenext.net.NavigatePayload;
 import com.finndog.locatenext.net.SelectModPayload;
 import com.finndog.locatenext.net.StructureIndexPayload;
 import com.finndog.locatenext.server.NavigationManager;
+import com.finndog.locatenext.server.Players;
 import com.finndog.locatenext.server.StructureCatalog;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -22,10 +23,18 @@ public final class LocateNextFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         // PayloadTypeRegistry is common to both sides, so registering here covers the client too.
+        // Fabric renamed these to match vanilla's clientbound/serverbound wording.
+        //? if >=26.1 {
+        /*PayloadTypeRegistry.clientboundPlay().register(StructureIndexPayload.TYPE, StructureIndexPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(NavStatePayload.TYPE, NavStatePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(NavigatePayload.TYPE, NavigatePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(SelectModPayload.TYPE, SelectModPayload.CODEC);
+        *///?} else {
         PayloadTypeRegistry.playS2C().register(StructureIndexPayload.TYPE, StructureIndexPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(NavStatePayload.TYPE, NavStatePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(NavigatePayload.TYPE, NavigatePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(SelectModPayload.TYPE, SelectModPayload.CODEC);
+        //?}
 
         ServerPlayNetworking.registerGlobalReceiver(NavigatePayload.TYPE, (payload, context) -> {
             ServerPlayer player = context.player();
@@ -36,8 +45,10 @@ public final class LocateNextFabric implements ModInitializer {
                 case NavigatePayload.OP_HOME -> NavigationManager.home(player);
                 case NavigatePayload.OP_VARIANT_NEXT -> NavigationManager.variantNext(player);
                 case NavigatePayload.OP_VARIANT_PREV -> NavigationManager.variantPrev(player);
+                // Entity#getName rather than the game profile: the profile accessor moved in
+                // 26.1, and this is only a log line.
                 default -> LocateNext.LOGGER.warn("Unknown navigate op {} from {}",
-                        payload.op(), player.getGameProfile().getName());
+                        payload.op(), player.getName().getString());
             }
         });
 
@@ -80,7 +91,7 @@ public final class LocateNextFabric implements ModInitializer {
         if (!state.hasSelection()) {
             return;
         }
-        var structures = StructureCatalog.byNamespace(player.server).get(state.namespace());
+        var structures = StructureCatalog.byNamespace(Players.server(player)).get(state.namespace());
         if (structures == null || structures.isEmpty()) {
             state.clear();
         } else {

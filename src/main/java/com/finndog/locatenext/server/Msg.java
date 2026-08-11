@@ -41,12 +41,19 @@ public final class Msg {
         return Component.literal(text).withStyle(ChatFormatting.GRAY);
     }
 
+    // 1.21.5 turned ClickEvent and HoverEvent into sealed interfaces with a record per action,
+    // replacing the (Action, String) pairs.
     /** A clickable chat button that runs {@code command}. */
     public static MutableComponent button(String label, String command, ChatFormatting colour) {
         return Component.literal(label).withStyle(style -> style
                 .withColor(colour)
+                //? if >=1.21.5 {
+                /*.withClickEvent(new ClickEvent.RunCommand(command))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal(command))));
+                *///?} else {
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(command))));
+                //?}
     }
 
     /** Coordinates that copy to the clipboard when clicked. */
@@ -54,9 +61,14 @@ public final class Msg {
         String text = pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
         return Component.literal(text).withStyle(style -> style
                 .withColor(ChatFormatting.GREEN)
+                //? if >=1.21.5 {
+                /*.withClickEvent(new ClickEvent.CopyToClipboard(text))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy"))));
+                *///?} else {
                 .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, text))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                         Component.literal("Click to copy"))));
+                //?}
     }
 
     /** The footer under every jump report. Mirrors the arrow keys: ◀ ▶ change structure, ↑ ↓ change instance. */

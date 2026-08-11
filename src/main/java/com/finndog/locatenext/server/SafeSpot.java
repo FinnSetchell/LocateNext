@@ -40,14 +40,23 @@ public final class SafeSpot {
         }
 
         int surface = chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15) + 1;
-        return new BlockPos(x, Math.max(surface, level.getMinBuildHeight() + 1), z);
+        return new BlockPos(x, Math.max(surface, minY(level) + 1), z);
+    }
+
+    /** 1.21.2 renamed getMinBuildHeight to getMinY. */
+    private static int minY(ServerLevel level) {
+        //? if >=1.21.2 {
+        /*return level.getMinY();
+        *///?} else {
+        return level.getMinBuildHeight();
+        //?}
     }
 
     /** Returns {@link Integer#MIN_VALUE} when the column is solid all the way down. */
     private static int scanUnderCeiling(ServerLevel level, int x, int z) {
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         int top = level.getLogicalHeight() - 1;
-        int bottom = level.getMinBuildHeight() + 1;
+        int bottom = minY(level) + 1;
 
         for (int y = top; y > bottom; y--) {
             cursor.set(x, y, z);

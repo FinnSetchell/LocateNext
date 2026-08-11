@@ -22,9 +22,7 @@
         "client": [
             "com.finndog.locatenext.fabric.LocateNextFabricClient"
         ],
-        "modmenu": [
-            "com.finndog.locatenext.client.LocateNextModMenu"
-        ]
+        "modmenu": [${modmenu_entrypoint}]
     },
     "depends": {
         "fabricloader": ">=${loader}",

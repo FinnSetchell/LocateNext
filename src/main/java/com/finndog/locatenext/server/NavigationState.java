@@ -1,11 +1,9 @@
 package com.finndog.locatenext.server;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -16,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /** One player's cursor into one mod's structure list, plus their per-session search settings. */
@@ -23,6 +22,34 @@ public final class NavigationState {
 
     /** Vanilla {@code /locate}'s default search radius, in chunks. */
     public static final int DEFAULT_RADIUS = 100;
+
+    /**
+     * The single serialization of this state, shared by every Minecraft version.
+     *
+     * <p>26.1's {@code SavedDataType} takes a {@link Codec} where the older {@code SavedData}
+     * took hand-written {@code CompoundTag} methods. Rather than keep two implementations in step
+     * â€” the classic source of silent save-format drift â€” there is one Codec, and the older
+     * versions run it through {@code NbtOps} to satisfy their factory.
+     *
+     * <p>`structures` is deliberately absent: it is rebuilt from the live registry by
+     * {@link #resolve}, so a datapack change between sessions is handled rather than baked in.
+     * Every field is optional with the same default the constructor uses, so a file written
+     * before a field existed loads with that field's default rather than a zero value.
+     */
+    public static final Codec<NavigationState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.STRING.optionalFieldOf("namespace", "").forGetter(NavigationState::namespace),
+            Codec.INT.optionalFieldOf("index", -1).forGetter(NavigationState::index),
+            Codec.INT.optionalFieldOf("radius", DEFAULT_RADIUS).forGetter(NavigationState::radius),
+            Codec.BOOL.optionalFieldOf("unexploredOnly", true).forGetter(NavigationState::unexploredOnly),
+            Codec.BOOL.optionalFieldOf("autoDimension", true).forGetter(NavigationState::autoDimension),
+            ResourceLocation.CODEC.listOf().optionalFieldOf("visited", List.of())
+                    .forGetter(state -> List.copyOf(state.visited)),
+            Codec.unboundedMap(ResourceLocation.CODEC, VariantHistory.CODEC)
+                    .optionalFieldOf("variants", Map.of()).forGetter(state -> state.variants),
+            ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("homeDimension")
+                    .forGetter(state -> Optional.ofNullable(state.homeDimension)),
+            BlockPos.CODEC.optionalFieldOf("homePos").forGetter(state -> Optional.ofNullable(state.homePos))
+    ).apply(instance, NavigationState::new));
 
     private String namespace = "";
     private List<ResourceLocation> structures = List.of();
@@ -32,7 +59,7 @@ public final class NavigationState {
     private int radius = DEFAULT_RADIUS;
     /**
      * Vanilla's {@code skipKnownStructures}. On, the generator refuses instances that have already
-     * been referenced and marks each hit as referenced on the way out — so every search returns a
+     * been referenced and marks each hit as referenced on the way out â€” so every search returns a
      * structure nobody has been sent to before. Default on: this is a tool for looking at fresh
      * generation, and repeatedly landing on the same instance is exactly what makes that tedious.
      */
@@ -41,11 +68,29 @@ public final class NavigationState {
     private boolean autoDimension = true;
 
     private final Set<ResourceLocation> visited = new HashSet<>();
-    /** Per-structure instance history, so ↑/↓ can walk variations of the same structure. */
+    /** Per-structure instance history, so â†‘/â†“ can walk variations of the same structure. */
     private final Map<ResourceLocation, VariantHistory> variants = new HashMap<>();
 
     @Nullable private BlockPos homePos;
     @Nullable private ResourceKey<Level> homeDimension;
+
+    public NavigationState() {
+    }
+
+    private NavigationState(String namespace, int index, int radius, boolean unexploredOnly,
+                            boolean autoDimension, List<ResourceLocation> visited,
+                            Map<ResourceLocation, VariantHistory> variants,
+                            Optional<ResourceKey<Level>> homeDimension, Optional<BlockPos> homePos) {
+        this.namespace = namespace;
+        this.index = index;
+        this.radius = radius;
+        this.unexploredOnly = unexploredOnly;
+        this.autoDimension = autoDimension;
+        this.visited.addAll(visited);
+        this.variants.putAll(variants);
+        this.homeDimension = homeDimension.orElse(null);
+        this.homePos = homePos.orElse(null);
+    }
 
     public String namespace() {
         return this.namespace;
@@ -89,7 +134,7 @@ public final class NavigationState {
     /**
      * Fills in the structure list after a load. The saved data records only the namespace, since
      * the structures themselves come from a datapack-driven registry that may have changed between
-     * sessions — so the list is rebuilt against whatever is registered now.
+     * sessions â€” so the list is rebuilt against whatever is registered now.
      */
     public void resolve(MinecraftServer server) {
         if (this.namespace.isEmpty() || !this.structures.isEmpty()) {
@@ -199,72 +244,5 @@ public final class NavigationState {
     public void clearHome() {
         this.homePos = null;
         this.homeDimension = null;
-    }
-
-    // ------------------------------------------------------------------ persistence
-
-    public CompoundTag save() {
-        CompoundTag tag = new CompoundTag();
-        tag.putString("namespace", this.namespace);
-        tag.putInt("index", this.index);
-        tag.putInt("radius", this.radius);
-        tag.putBoolean("unexploredOnly", this.unexploredOnly);
-        tag.putBoolean("autoDimension", this.autoDimension);
-
-        ListTag visitedList = new ListTag();
-        this.visited.forEach(id -> visitedList.add(StringTag.valueOf(id.toString())));
-        tag.put("visited", visitedList);
-
-        CompoundTag variantsTag = new CompoundTag();
-        this.variants.forEach((id, history) -> {
-            if (!history.isEmpty()) {
-                variantsTag.put(id.toString(), history.save());
-            }
-        });
-        tag.put("variants", variantsTag);
-
-        if (this.homePos != null && this.homeDimension != null) {
-            tag.putString("homeDimension", this.homeDimension.location().toString());
-            tag.putIntArray("homePos",
-                    new int[]{this.homePos.getX(), this.homePos.getY(), this.homePos.getZ()});
-        }
-        return tag;
-    }
-
-    public static NavigationState load(CompoundTag tag) {
-        NavigationState state = new NavigationState();
-        state.namespace = tag.getString("namespace");
-        state.index = tag.getInt("index");
-        state.radius = tag.contains("radius") ? tag.getInt("radius") : DEFAULT_RADIUS;
-        // contains() guards rather than getBoolean's silent false, so a tag written before these
-        // existed keeps the defaults instead of flipping both off.
-        state.unexploredOnly = !tag.contains("unexploredOnly") || tag.getBoolean("unexploredOnly");
-        state.autoDimension = !tag.contains("autoDimension") || tag.getBoolean("autoDimension");
-
-        ListTag visitedList = tag.getList("visited", Tag.TAG_STRING);
-        for (int i = 0; i < visitedList.size(); i++) {
-            ResourceLocation id = ResourceLocation.tryParse(visitedList.getString(i));
-            if (id != null) {
-                state.visited.add(id);
-            }
-        }
-
-        CompoundTag variantsTag = tag.getCompound("variants");
-        for (String key : variantsTag.getAllKeys()) {
-            ResourceLocation id = ResourceLocation.tryParse(key);
-            if (id != null) {
-                state.variants.put(id, VariantHistory.load(variantsTag.getCompound(key)));
-            }
-        }
-
-        int[] home = tag.getIntArray("homePos");
-        ResourceLocation homeDimension = ResourceLocation.tryParse(tag.getString("homeDimension"));
-        if (home.length == 3 && homeDimension != null) {
-            state.homePos = new BlockPos(home[0], home[1], home[2]);
-            state.homeDimension = ResourceKey.create(Registries.DIMENSION, homeDimension);
-        }
-
-        // structures stays empty on purpose — resolve() rebuilds it from the live registry.
-        return state;
     }
 }

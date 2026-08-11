@@ -37,3 +37,21 @@ mod.mc_compat = "~1.21.1"
 deps.fabric_api = "0.116.14+1.21.1"
 # compileOnly — Mod Menu is never bundled, and the mod runs fine without it.
 deps.modmenu = "11.0.3"
+
+# ------------------------------------------------------------------ 26.2 (Java 25, unobfuscated)
+# From 26.1 Minecraft ships unobfuscated, so loom-back-compat swaps to plain fabric-loom here and
+# `loomx.applyMojangMappings()` becomes a no-op.
+["26.2"]
+mod.mc_releases = ["26.2"]
+mod.pack_format = "88"
+mod.java = "25"
+
+[fabric."26.2"]
+mod.mc_compat = "~26.2"
+# Matches the fabric-api in the 26.2 CurseForge instance this is deployed to.
+deps.fabric_api = "0.157.0+26.2"
+# Blank = no Mod Menu integration on this version. Mod Menu's 26.x artifact still carries
+# intermediary references that Loom does not remap against an un-obfuscated Minecraft, so
+# compiling against it fails on `class_437`. The integration is a convenience (its config button
+# opens the picker), so 26.2 simply ships without it rather than holding the port up.
+deps.modmenu = ""

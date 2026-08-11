@@ -1,12 +1,10 @@
 package com.finndog.locatenext.server;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,10 +23,35 @@ public final class VariantHistory {
 
     /** One located instance. {@code structurePos} is the raw find; {@code landing} is where we put you. */
     public record Landing(ResourceKey<Level> dimension, BlockPos structurePos, BlockPos landing) {
+
+        public static final Codec<Landing> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                ResourceKey.codec(Registries.DIMENSION).fieldOf("dimension").forGetter(Landing::dimension),
+                BlockPos.CODEC.fieldOf("structure").forGetter(Landing::structurePos),
+                BlockPos.CODEC.fieldOf("landing").forGetter(Landing::landing)
+        ).apply(instance, Landing::new));
     }
+
+    public static final Codec<VariantHistory> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Landing.CODEC.listOf().optionalFieldOf("landings", List.of()).forGetter(VariantHistory::landings),
+            Codec.INT.optionalFieldOf("cursor", -1).forGetter(VariantHistory::cursor)
+    ).apply(instance, VariantHistory::new));
 
     private final List<Landing> landings = new ArrayList<>();
     private int cursor = -1;
+
+    public VariantHistory() {
+    }
+
+    private VariantHistory(List<Landing> landings, int cursor) {
+        this.landings.addAll(landings);
+        // Clamped rather than trusted: a hand-edited or truncated file could otherwise leave the
+        // cursor pointing past the end.
+        this.cursor = Math.min(cursor, this.landings.size() - 1);
+    }
+
+    private int cursor() {
+        return this.cursor;
+    }
 
     public boolean isEmpty() {
         return this.landings.isEmpty();
@@ -88,53 +111,5 @@ public final class VariantHistory {
 
     public List<Landing> landings() {
         return List.copyOf(this.landings);
-    }
-
-    // ------------------------------------------------------------------ persistence
-
-    // Positions go in as plain int arrays rather than through NbtUtils, whose block-pos helpers
-    // changed shape across 1.20/1.21 and would need a Stonecutter branch per version.
-    public CompoundTag save() {
-        CompoundTag tag = new CompoundTag();
-        ListTag list = new ListTag();
-        for (Landing landing : this.landings) {
-            CompoundTag entry = new CompoundTag();
-            entry.putString("dimension", landing.dimension().location().toString());
-            entry.putIntArray("structure", pack(landing.structurePos()));
-            entry.putIntArray("landing", pack(landing.landing()));
-            list.add(entry);
-        }
-        tag.put("landings", list);
-        tag.putInt("cursor", this.cursor);
-        return tag;
-    }
-
-    public static VariantHistory load(CompoundTag tag) {
-        VariantHistory history = new VariantHistory();
-        ListTag list = tag.getList("landings", Tag.TAG_COMPOUND);
-        for (int i = 0; i < list.size(); i++) {
-            CompoundTag entry = list.getCompound(i);
-            ResourceLocation dimensionId = ResourceLocation.tryParse(entry.getString("dimension"));
-            BlockPos structure = unpack(entry.getIntArray("structure"));
-            BlockPos landing = unpack(entry.getIntArray("landing"));
-            if (dimensionId == null || structure == null || landing == null) {
-                continue;
-            }
-            history.landings.add(new Landing(
-                    ResourceKey.create(Registries.DIMENSION, dimensionId), structure, landing));
-        }
-        // Clamped rather than trusted: entries above can be skipped as malformed, which would
-        // otherwise leave the cursor pointing past the end.
-        history.cursor = Math.min(tag.getInt("cursor"), history.landings.size() - 1);
-        return history;
-    }
-
-    private static int[] pack(BlockPos pos) {
-        return new int[]{pos.getX(), pos.getY(), pos.getZ()};
-    }
-
-    @Nullable
-    private static BlockPos unpack(int[] values) {
-        return values.length == 3 ? new BlockPos(values[0], values[1], values[2]) : null;
     }
 }
