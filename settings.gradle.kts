@@ -34,6 +34,8 @@ stonecutter {
 
         // 1.21.1 is the reference node — the one that has been tested in-game end to end.
         match("1.21.1", "fabric")
+        match("1.21.11", "fabric")
+        match("26.1.2", "fabric")
         match("26.2", "fabric")
 
         vcsVersion = "1.21.1-fabric"

@@ -118,38 +118,40 @@ jobs:
 
       - name: Collect jars
         id: jars
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
         run: |
           set -euo pipefail
           mkdir -p staging
-          # Stonecutter puts each node's output under its own versions/<node>/build/libs.
-          # Companion jars are excluded the way v2's reconcile.locate_file does it.
+          # Stonecutter puts each node's output under its own versions/<node>/build/libs, so this
+          # picks up every Minecraft version the repo builds.
+          #
+          # Selecting BY VERSION rather than globbing everything: a build directory that already
+          # held an older version's jars would otherwise stage those too, and a release quietly
+          # carrying a stale jar is worse than one that fails. CI checks out clean, but the same
+          # workflow gets run locally to debug it.
+          #
+          # Companion jars are excluded the way release-actions' reconcile.locate_file does it.
           found=0
           for jar in versions/*/build/libs/*.jar; do
             [ -e "$jar" ] || continue
-            case "$(basename "$jar")" in
+            name="$(basename "$jar")"
+            case "$name" in
               *-sources.jar|*-javadoc.jar|*-dev.jar|*-slim.jar) continue ;;
+            esac
+            case "$name" in
+              *"$VERSION"*) ;;
+              *) echo "Skipping $name — not version $VERSION"; continue ;;
             esac
             cp "$jar" staging/
             found=$((found + 1))
           done
           if [ "$found" -eq 0 ]; then
-            echo "::error::no jars found under versions/*/build/libs"
+            echo "::error::no jars for version $VERSION under versions/*/build/libs"
             exit 1
           fi
           echo "Staged $found jar(s):"
           ls -la staging/
-
-      - name: Verify the jars carry the tag's version
-        env:
-          VERSION: ${{ steps.tag.outputs.version }}
-        run: |
-          set -euo pipefail
-          for jar in staging/*.jar; do
-            case "$(basename "$jar")" in
-              *"$VERSION"*) ;;
-              *) echo "::error::$(basename "$jar") does not contain version $VERSION"; exit 1 ;;
-            esac
-          done
 
       - name: Create the GitHub release
         env:

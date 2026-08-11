@@ -41,10 +41,10 @@ public final class LocateNextCommand {
     }
 
     /**
-     * 26.1 replaced the numeric permission levels with a PermissionSet; LEVEL_GAMEMASTERS is the
-     * named equivalent of the old level 2.
+     * 1.21.11 replaced the numeric permission levels with a PermissionSet; LEVEL_GAMEMASTERS is
+     * the named equivalent of the old level 2.
      */
-    //? if >=26.1 {
+    //? if >=1.21.11 {
     /*private static java.util.function.Predicate<CommandSourceStack> operatorOnly() {
         return Commands.hasPermission(Commands.LEVEL_GAMEMASTERS);
     }

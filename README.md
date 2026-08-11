@@ -4,7 +4,14 @@ An internal dev tool for testing structure mods. Pick a mod id, then walk its en
 with the arrow keys — each press locates the next structure and teleports you to it, so you never
 type `/locate` or track your place in the list again.
 
-Fabric, Minecraft 1.21.1, built with Stonecutter.
+Fabric, built with Stonecutter. One jar per Minecraft version:
+
+| Version | Java | Notes |
+| --- | --- | --- |
+| 1.21.1 | 21 | Reference version — includes Mod Menu integration |
+| 1.21.11 | 21 | |
+| 26.1.2 | 25 | |
+| 26.2 | 25 | |
 
 ## Usage
 
@@ -155,11 +162,22 @@ shaped like v2 — same tag form, same jar naming, same changelog rules — so m
 mod has storefront projects means deleting `.github/workflows/release.yml`, adding the three thin
 caller workflows and a `moogs-publish.yml`. Tags cut now stay valid.
 
+Output lands in `versions/{version}-fabric/build/libs/`.
+
 ### Adding a Minecraft version
 
 Add a `match("1.21.4", "fabric")` line to `settings.gradle.kts` and the matching `["1.21.4"]` /
-`[fabric."1.21.4"]` tables to `stonecutter.properties.toml`. Stonecutter generates the node; any
-API differences get `//? if >=1.21.4 { ... //?}` comments in the shared source tree.
+`[fabric."1.21.4"]` tables to `stonecutter.properties.toml`, then build the node and let the
+compiler tell you what moved. API differences get `//? if >=1.21.4 { ... //?}` conditionals in the
+shared source tree.
+
+Two rules worth keeping, both learned the hard way:
+
+- Use `string(...)` replacements for whole-tree renames, never `regex(...)` — a regex replacement
+  emits JSON the IntelliJ plugin can't model, and the IDE then drops the whole project.
+- Put the conditional at the version the API *actually* changed at, not the version you happened
+  to be porting to. Several changes here look like 26.1 from a 1.21.1 vantage point but really
+  landed at 1.21.11; adding the 1.21.11 node is what surfaced them.
 
 ## AI usage disclaimer
 

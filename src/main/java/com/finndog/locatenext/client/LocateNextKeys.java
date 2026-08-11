@@ -3,10 +3,11 @@ package com.finndog.locatenext.client;
 import com.finndog.locatenext.net.NavigatePayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+// Unconditional: 1.21.11's keybind Category is built from a mod id, below the 26.1 module rename.
+import com.finndog.locatenext.LocateNext;
 // 26.1 renamed Fabric's module from key-binding to key-mapping, matching vanilla's own name.
 //? if >=26.1 {
-/*import com.finndog.locatenext.LocateNext;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+/*import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 *///?} else {
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 //?}
@@ -19,9 +20,9 @@ import org.lwjgl.glfw.GLFW;
  */
 public final class LocateNextKeys {
 
-    // 26.1 made the category a registered value keyed by an Identifier rather than a bare
+    // 1.21.11 made the category a registered value keyed by an Identifier rather than a bare
     // translation key, so the lang file carries both spellings.
-    //? if >=26.1 {
+    //? if >=1.21.11 {
     /*private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(LocateNext.id("main"));
     *///?} else {
     private static final String CATEGORY = "key.categories.locatenext";

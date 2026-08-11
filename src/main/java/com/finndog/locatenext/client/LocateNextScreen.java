@@ -285,7 +285,7 @@ public final class LocateNextScreen extends Screen {
     // 26.1 replaced the (x, y, button) triple with a MouseButtonEvent carrying the same values
     // plus a "double click" flag. Only the signature and the accessors differ; the body below is
     // shared, so it reads the three values into locals and continues unchanged.
-    //? if >=26.1 {
+    //? if >=1.21.11 {
     /*@Override
     public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
         if (super.mouseClicked(event, doubleClick)) {

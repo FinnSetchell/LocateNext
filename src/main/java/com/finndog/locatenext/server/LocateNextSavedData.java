@@ -50,9 +50,16 @@ public final class LocateNextSavedData extends SavedData {
         this.states.putAll(states);
     }
 
+    // SavedDataType's id was a plain String until 26.1 made it an Identifier.
+    //? if >=26.1 {
+    /*private static final net.minecraft.resources.Identifier TYPE_ID = LocateNext.id(FILE_ID);
+    *///?} else {
+    private static final String TYPE_ID = FILE_ID;
+    //?}
+
     //? if >=1.21.5 {
     /*private static final SavedDataType<LocateNextSavedData> TYPE = new SavedDataType<>(
-            LocateNext.id(FILE_ID), LocateNextSavedData::new, CODEC, DataFixTypes.LEVEL);
+            TYPE_ID, LocateNextSavedData::new, CODEC, DataFixTypes.LEVEL);
 
     public static LocateNextSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(TYPE);

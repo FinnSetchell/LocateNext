@@ -9,7 +9,7 @@ mod.name = "LocateNext"
 # Artifact stem for the fleet filename convention {ModName}-{loader}-{mc}-{version}.jar.
 mod.archive_name = "LocateNext"
 mod.group = "com.finndog.locatenext"
-mod.version = "1.0.0"
+mod.version = "1.1.0"
 mod.author = "FinnSetchell"
 mod.license = "MIT"
 mod.description = "A structure-testing dev tool: pick a mod, then arrow-key your way through every structure it adds, locating and teleporting to each in turn."
@@ -37,6 +37,30 @@ mod.mc_compat = "~1.21.1"
 deps.fabric_api = "0.116.14+1.21.1"
 # compileOnly — Mod Menu is never bundled, and the mod runs fine without it.
 deps.modmenu = "11.0.3"
+
+# ------------------------------------------------------------------ 1.21.11 (Java 21)
+# Carries the 1.21.11 renames (ResourceLocation -> Identifier, ResourceKey#location ->
+# #identifier, the Commands permission set) but sits BELOW 26.1's GUI and key-mapping rework.
+["1.21.11"]
+mod.mc_releases = ["1.21.11"]
+mod.pack_format = "75"
+mod.java = "21"
+
+[fabric."1.21.11"]
+mod.mc_compat = "~1.21.11"
+deps.fabric_api = "0.141.5+1.21.11"
+deps.modmenu = ""
+
+# ------------------------------------------------------------------ 26.1.2 (Java 25, unobfuscated)
+["26.1.2"]
+mod.mc_releases = ["26.1", "26.1.1", "26.1.2"]
+mod.pack_format = "84"
+mod.java = "25"
+
+[fabric."26.1.2"]
+mod.mc_compat = "~26.1"
+deps.fabric_api = "0.155.2+26.1.2"
+deps.modmenu = ""
 
 # ------------------------------------------------------------------ 26.2 (Java 25, unobfuscated)
 # From 26.1 Minecraft ships unobfuscated, so loom-back-compat swaps to plain fabric-loom here and
