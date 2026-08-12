@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0] - 2026-08-12
+
+Adds 1.20.1, bringing the supported set to 1.20.1, 1.21.1, 1.21.11, 26.1.2 and 26.2.
+
+1.20.1 predates the payload networking system entirely — `CustomPacketPayload`, `StreamCodec` and
+the codec registry all arrived in 1.20.5 — so it needed a second networking path rather than a
+rename. Each payload now owns its buffer read/write, which is identical on every version, and only
+registration and sending differ. That split lives in `Net`/`ClientNet` instead of at each call
+site. One difference there is load-bearing: the old API hands packets to the netty thread, so those
+handlers hop to the server thread explicitly before touching any world state.
+
+Persistence is a three-way split now (1.20.1, 1.21.1-era, 1.21.5+), all sharing the one Codec.
+
+---
+
 ## [1.1.0] - 2026-08-11
 
 Adds 1.21.11, 26.1.2 and 26.2 alongside 1.21.1. One source tree, one jar per version.

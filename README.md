@@ -8,6 +8,7 @@ Fabric, built with Stonecutter. One jar per Minecraft version:
 
 | Version | Java | Notes |
 | --- | --- | --- |
+| 1.20.1 | 17 | Uses the pre-1.20.5 networking API |
 | 1.21.1 | 21 | Reference version — includes Mod Menu integration |
 | 1.21.11 | 21 | |
 | 26.1.2 | 25 | |

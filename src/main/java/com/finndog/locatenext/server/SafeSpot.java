@@ -5,7 +5,12 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
+// 1.20.5 moved ChunkStatus into its own `status` package.
+//? if >=1.20.5 {
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+//?} else {
+/*import net.minecraft.world.level.chunk.ChunkStatus;
+*///?}
 import net.minecraft.world.level.levelgen.Heightmap;
 
 /**

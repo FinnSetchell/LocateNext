@@ -2,9 +2,8 @@ package com.finndog.locatenext.fabric;
 
 import com.finndog.locatenext.LocateNext;
 import com.finndog.locatenext.command.LocateNextCommand;
-import com.finndog.locatenext.net.NavStatePayload;
 import com.finndog.locatenext.net.NavigatePayload;
-import com.finndog.locatenext.net.SelectModPayload;
+import com.finndog.locatenext.net.Net;
 import com.finndog.locatenext.net.StructureIndexPayload;
 import com.finndog.locatenext.server.NavigationManager;
 import com.finndog.locatenext.server.Players;
@@ -12,9 +11,7 @@ import com.finndog.locatenext.server.StructureCatalog;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -22,22 +19,10 @@ public final class LocateNextFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // PayloadTypeRegistry is common to both sides, so registering here covers the client too.
-        // Fabric renamed these to match vanilla's clientbound/serverbound wording.
-        //? if >=26.1 {
-        /*PayloadTypeRegistry.clientboundPlay().register(StructureIndexPayload.TYPE, StructureIndexPayload.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(NavStatePayload.TYPE, NavStatePayload.CODEC);
-        PayloadTypeRegistry.serverboundPlay().register(NavigatePayload.TYPE, NavigatePayload.CODEC);
-        PayloadTypeRegistry.serverboundPlay().register(SelectModPayload.TYPE, SelectModPayload.CODEC);
-        *///?} else {
-        PayloadTypeRegistry.playS2C().register(StructureIndexPayload.TYPE, StructureIndexPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(NavStatePayload.TYPE, NavStatePayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(NavigatePayload.TYPE, NavigatePayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(SelectModPayload.TYPE, SelectModPayload.CODEC);
-        //?}
+        // Common to both sides, so registering here covers the client too.
+        Net.registerTypes();
 
-        ServerPlayNetworking.registerGlobalReceiver(NavigatePayload.TYPE, (payload, context) -> {
-            ServerPlayer player = context.player();
+        Net.onNavigate((player, payload) -> {
             switch (payload.op()) {
                 case NavigatePayload.OP_NEXT -> NavigationManager.step(player, 1);
                 case NavigatePayload.OP_PREV -> NavigationManager.step(player, -1);
@@ -52,8 +37,8 @@ public final class LocateNextFabric implements ModInitializer {
             }
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(SelectModPayload.TYPE, (payload, context) ->
-                NavigationManager.selectMod(context.player(), payload.namespace()));
+        Net.onSelectMod((player, payload) ->
+                NavigationManager.selectMod(player, payload.namespace()));
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 LocateNextCommand.register(dispatcher));
@@ -82,7 +67,7 @@ public final class LocateNextFabric implements ModInitializer {
     }
 
     private static void sendIndex(MinecraftServer server, ServerPlayer player) {
-        ServerPlayNetworking.send(player, new StructureIndexPayload(StructureCatalog.allIds(server)));
+        Net.send(player, new StructureIndexPayload(StructureCatalog.allIds(server)));
     }
 
     /** Rebuilds a player's list against the reloaded registry, keeping their position if possible. */

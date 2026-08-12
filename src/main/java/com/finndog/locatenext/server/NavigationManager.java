@@ -2,6 +2,7 @@ package com.finndog.locatenext.server;
 
 import com.finndog.locatenext.LocateNext;
 import com.finndog.locatenext.net.NavStatePayload;
+import com.finndog.locatenext.net.Net;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -596,7 +597,7 @@ public final class NavigationManager {
 
     public static void syncState(ServerPlayer player) {
         NavigationState state = state(player);
-        ServerPlayNetworking.send(player, new NavStatePayload(state.namespace(), state.index()));
+        Net.send(player, new NavStatePayload(state.namespace(), state.index()));
     }
 
 }

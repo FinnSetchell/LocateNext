@@ -32,6 +32,7 @@ stonecutter {
             }
         }
 
+        match("1.20.1", "fabric")
         // 1.21.1 is the reference node — the one that has been tested in-game end to end.
         match("1.21.1", "fabric")
         match("1.21.11", "fabric")

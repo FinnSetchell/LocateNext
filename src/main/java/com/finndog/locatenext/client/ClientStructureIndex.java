@@ -3,8 +3,6 @@ package com.finndog.locatenext.client;
 import com.finndog.locatenext.net.NavigatePayload;
 import com.finndog.locatenext.net.SelectModPayload;
 import com.finndog.locatenext.server.StructureCatalog;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
@@ -56,24 +54,17 @@ public final class ClientStructureIndex {
 
     // ------------------------------------------------------------------ outgoing
 
-    /** No-op when the server doesn't have the mod, so keybinds stay silent instead of erroring. */
-    private static void send(CustomPacketPayload payload, CustomPacketPayload.Type<?> type) {
-        if (ClientPlayNetworking.canSend(type)) {
-            ClientPlayNetworking.send(payload);
-        }
-    }
-
     public static void navigate(int op) {
-        send(NavigatePayload.of(op), NavigatePayload.TYPE);
+        ClientNet.send(NavigatePayload.of(op));
     }
 
     public static void goTo(int index) {
-        send(new NavigatePayload(NavigatePayload.OP_GOTO, index), NavigatePayload.TYPE);
+        ClientNet.send(new NavigatePayload(NavigatePayload.OP_GOTO, index));
     }
 
     public static void selectMod(String namespace) {
         selectedNamespace = namespace;
         selectedIndex = -1;
-        send(new SelectModPayload(namespace), SelectModPayload.TYPE);
+        ClientNet.send(new SelectModPayload(namespace));
     }
 }

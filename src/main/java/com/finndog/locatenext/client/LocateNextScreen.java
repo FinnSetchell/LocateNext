@@ -325,8 +325,13 @@ public final class LocateNextScreen extends Screen {
         return false;
     }
 
+    // 1.20.2 split scroll into separate X and Y deltas; before that there was one.
     @Override
+    //? if >=1.20.2 {
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    //?} else {
+    /*public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
+    *///?}
         int delta = (int) -Math.signum(scrollY) * 3;
         if (mouseX >= this.panelLeft && mouseX < this.panelLeft + this.leftWidth) {
             this.modScroll = clampScroll(this.modScroll + delta, this.visibleMods.size());
@@ -336,7 +341,11 @@ public final class LocateNextScreen extends Screen {
             this.structureScroll = clampScroll(this.structureScroll + delta, this.visibleStructures.size());
             return true;
         }
+        //? if >=1.20.2 {
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        //?} else {
+        /*return super.mouseScrolled(mouseX, mouseY, scrollY);
+        *///?}
     }
 
     @Override

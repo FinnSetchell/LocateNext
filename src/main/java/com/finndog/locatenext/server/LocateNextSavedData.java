@@ -10,9 +10,11 @@ import net.minecraft.world.level.saveddata.SavedData;
 /*import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedDataType;
 *///?} else {
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
+//?}
+//? if >=1.20.5 && <1.21.5 {
+import net.minecraft.core.HolderLookup;
 //?}
 
 import java.util.HashMap;
@@ -64,7 +66,11 @@ public final class LocateNextSavedData extends SavedData {
     public static LocateNextSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(TYPE);
     }
-    *///?} else {
+    *///?}
+
+    // Three independent, mutually exclusive conditions rather than an if/elif/else chain: the
+    // chain silently selected the wrong arm here, and non-overlapping guards cannot.
+    //? if >=1.20.5 && <1.21.5 {
     public static LocateNextSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(factory(), FILE_ID);
     }
@@ -76,13 +82,37 @@ public final class LocateNextSavedData extends SavedData {
     }
 
     private static LocateNextSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+        return decode(tag);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        return encode(tag);
+    }
+    //?}
+
+    // 1.20.5 introduced SavedData.Factory; before it, the storage takes the loader and the
+    // constructor as separate arguments and neither side sees a registry lookup.
+    //? if <1.20.5 {
+    /*public static LocateNextSavedData get(MinecraftServer server) {
+        return server.overworld().getDataStorage()
+                .computeIfAbsent(LocateNextSavedData::decode, LocateNextSavedData::new, FILE_ID);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        return encode(tag);
+    }
+    *///?}
+
+    //? if <1.21.5 {
+    private static LocateNextSavedData decode(CompoundTag tag) {
         return CODEC.parse(NbtOps.INSTANCE, tag)
                 .resultOrPartial(error -> LocateNext.LOGGER.error("Discarding unreadable {}: {}", FILE_ID, error))
                 .orElseGet(LocateNextSavedData::new);
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    private CompoundTag encode(CompoundTag tag) {
         CODEC.encodeStart(NbtOps.INSTANCE, this)
                 .resultOrPartial(error -> LocateNext.LOGGER.error("Failed to write {}: {}", FILE_ID, error))
                 .ifPresent(encoded -> tag.merge((CompoundTag) encoded));

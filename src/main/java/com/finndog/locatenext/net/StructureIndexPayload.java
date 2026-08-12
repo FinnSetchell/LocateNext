@@ -1,11 +1,12 @@
 package com.finndog.locatenext.net;
 
 import com.finndog.locatenext.LocateNext;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+//? if >=1.20.5 {
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+//?}
 
 import java.util.List;
 
@@ -15,17 +16,32 @@ import java.util.List;
  * <p>The structure registry is dynamic, so the client cannot derive this itself — without the
  * push, the menu would have nothing to list.
  */
-public record StructureIndexPayload(List<ResourceLocation> structures) implements CustomPacketPayload {
+public record StructureIndexPayload(List<ResourceLocation> structures)
+        //? if >=1.20.5 {
+        implements CustomPacketPayload
+        //?}
+{
 
+    public static final ResourceLocation ID = LocateNext.id("structure_index");
+
+    public void write(FriendlyByteBuf buf) {
+        buf.writeCollection(this.structures, FriendlyByteBuf::writeResourceLocation);
+    }
+
+    public static StructureIndexPayload read(FriendlyByteBuf buf) {
+        return new StructureIndexPayload(buf.readList(FriendlyByteBuf::readResourceLocation));
+    }
+
+    //? if >=1.20.5 {
     public static final CustomPacketPayload.Type<StructureIndexPayload> TYPE =
-            new CustomPacketPayload.Type<>(LocateNext.id("structure_index"));
+            new CustomPacketPayload.Type<>(ID);
 
-    public static final StreamCodec<ByteBuf, StructureIndexPayload> CODEC =
-            ResourceLocation.STREAM_CODEC.apply(ByteBufCodecs.list())
-                    .map(StructureIndexPayload::new, StructureIndexPayload::structures);
+    public static final StreamCodec<FriendlyByteBuf, StructureIndexPayload> CODEC =
+            StreamCodec.of((buf, payload) -> payload.write(buf), StructureIndexPayload::read);
 
     @Override
     public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
+    //?}
 }
