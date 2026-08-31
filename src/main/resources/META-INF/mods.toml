@@ -1,3 +1,8 @@
+# Forge's own mods.toml schema across every version this mod ships for (1.20.1-1.21.11): the same
+# `mandatory = true` shape NeoForge's own 1.20.4 fork still carried at the point it forked from
+# Forge, before NeoForge evolved its own neoforge.mods.toml. Shared by both: the loader dependency
+# modid/range is templated (${loader_dep}/${loader_dep_range}) so Forge's build script can point it
+# at "forge" and NeoForge's legacy (1.20.4) build can point it at "neoforge".
 modLoader = "javafml"
 loaderVersion = "[4,)"
 license = "${license}"
@@ -13,9 +18,9 @@ displayURL = "https://github.com/FinnSetchell/LocateNext"
 displayTest = "IGNORE_ALL_VERSION"
 
 [[dependencies.${id}]]
-modId = "neoforge"
+modId = "${loader_dep}"
 mandatory = true
-versionRange = "[${neo_loader},)"
+versionRange = "${loader_dep_range}"
 ordering = "NONE"
 side = "BOTH"
 

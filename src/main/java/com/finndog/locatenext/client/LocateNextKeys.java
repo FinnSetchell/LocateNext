@@ -21,6 +21,11 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 //? if neoforge {
 /*import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 *///?}
+// Forge's own RegisterKeyMappingsEvent is a distinct type from NeoForge's, but registers the same
+// way (event.register(KeyMapping)), so the create()/registerAll() body just below is shared.
+//? if forge {
+/*import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+*///?}
 
 /**
  * Arrow keys drive the cursor. They are unbound in vanilla, so this steals nothing — and holding
@@ -73,6 +78,28 @@ public final class LocateNextKeys {
     //?}
 
     //? if neoforge {
+    /*public static void create() {
+        next = new KeyMapping("key.locatenext.next", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT, CATEGORY);
+        prev = new KeyMapping("key.locatenext.prev", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT, CATEGORY);
+        variantNext = new KeyMapping("key.locatenext.variant_next", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UP, CATEGORY);
+        variantPrev = new KeyMapping("key.locatenext.variant_prev", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_DOWN, CATEGORY);
+        menu = new KeyMapping("key.locatenext.screen", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_BACKSLASH, CATEGORY);
+    }
+
+    public static void registerAll(RegisterKeyMappingsEvent event) {
+        event.register(next);
+        event.register(prev);
+        event.register(variantNext);
+        event.register(variantPrev);
+        event.register(menu);
+    }
+    *///?}
+
+    // Identical body to the NeoForge block above — Forge's own RegisterKeyMappingsEvent registers
+    // the same way, just imported from a different package (see the imports above). Kept as its
+    // own block rather than widening the neoforge condition to avoid relying on unproven `||`
+    // support in Stonecutter's condition grammar.
+    //? if forge {
     /*public static void create() {
         next = new KeyMapping("key.locatenext.next", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT, CATEGORY);
         prev = new KeyMapping("key.locatenext.prev", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT, CATEGORY);

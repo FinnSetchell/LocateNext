@@ -55,6 +55,17 @@ stonecutter {
         match("1.21.5", "neoforge")
         match("1.21.11", "neoforge")
 
+        // Forge nodes. Unlike NeoForge, Forge (net.minecraftforge) never stopped publishing for
+        // its own version line after the NeoForge fork, so it covers the same range Fabric does.
+        match("1.20.1", "forge")
+        match("1.20.4", "forge")
+        match("1.20.6", "forge")
+        match("1.21.1", "forge")
+        match("1.21.3", "forge")
+        match("1.21.4", "forge")
+        match("1.21.5", "forge")
+        match("1.21.11", "forge")
+
         vcsVersion = "1.21.1-fabric"
     }
 }

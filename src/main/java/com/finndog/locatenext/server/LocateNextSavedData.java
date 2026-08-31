@@ -92,9 +92,10 @@ public final class LocateNextSavedData extends SavedData {
     //?}
 
     // 1.20.2 introduced SavedData.Factory; before it, the storage takes the loader and the
-    // constructor as separate arguments and neither side sees a registry lookup. No NeoForge node
-    // goes below 1.20.4, so this branch is reached only by fabric.
-    //? if <1.20.2 {
+    // constructor as separate arguments and neither side sees a registry lookup. Neither NeoForge
+    // nor Forge goes below 1.20.4, so this branch is fabric only; Forge's own pre-1.20.4 shape is
+    // handled separately below.
+    //? if fabric && <1.20.2 {
     /*public static LocateNextSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage()
                 .computeIfAbsent(LocateNextSavedData::decode, LocateNextSavedData::new, FILE_ID);
@@ -135,6 +136,38 @@ public final class LocateNextSavedData extends SavedData {
 
     private static SavedData.Factory<LocateNextSavedData> factory() {
         return new SavedData.Factory<>(LocateNextSavedData::new, LocateNextSavedData::decode);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        return encode(tag);
+    }
+    *///?}
+
+    // Forge's own pre-1.20.5 split is finer than NeoForge's: confirmed against the real
+    // 1.20.1/1.20.4 Forge sources (not guessed). 1.20.1 (predating the NeoForge fork point
+    // entirely) still has the plain vanilla Function/Supplier overload, same as Fabric above. But
+    // Forge 1.20.4 already carries its own three-argument SavedData.Factory (constructor,
+    // deserializer, DataFixTypes) — a third, distinct shape from both the plain overload and
+    // NeoForge's own two-argument Factory just above.
+    //? if forge && <1.20.4 {
+    /*public static LocateNextSavedData get(MinecraftServer server) {
+        return server.overworld().getDataStorage()
+                .computeIfAbsent(LocateNextSavedData::decode, LocateNextSavedData::new, FILE_ID);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        return encode(tag);
+    }
+    *///?}
+    //? if forge && >=1.20.4 && <1.20.5 {
+    /*public static LocateNextSavedData get(MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(factory(), FILE_ID);
+    }
+
+    private static SavedData.Factory<LocateNextSavedData> factory() {
+        return new SavedData.Factory<>(LocateNextSavedData::new, LocateNextSavedData::decode, null);
     }
 
     @Override
