@@ -37,6 +37,29 @@ mod.mc_compat = "~1.20.1"
 deps.fabric_api = "0.92.11+1.20.1"
 deps.modmenu = ""
 
+# ------------------------------------------------------------------ 1.20.4 (Java 17)
+["1.20.4"]
+mod.mc_releases = ["1.20.4"]
+mod.pack_format = "22"
+mod.java = "17"
+
+[fabric."1.20.4"]
+mod.mc_compat = "~1.20.4"
+deps.fabric_api = "0.97.3+1.20.4"
+deps.modmenu = ""
+
+# ------------------------------------------------------------------ 1.20.6 (Java 21)
+# 1.20.5 raised the floor to Java 21 and shares this pack format with 1.20.6.
+["1.20.6"]
+mod.mc_releases = ["1.20.5", "1.20.6"]
+mod.pack_format = "32"
+mod.java = "21"
+
+[fabric."1.20.6"]
+mod.mc_compat = "~1.20.6"
+deps.fabric_api = "0.100.8+1.20.6"
+deps.modmenu = "10.0.0"
+
 # ------------------------------------------------------------------ 1.21.1 (Java 21)
 ["1.21.1"]
 mod.mc_releases = ["1.21", "1.21.1"]
@@ -48,6 +71,40 @@ mod.mc_compat = "~1.21.1"
 deps.fabric_api = "0.116.14+1.21.1"
 # compileOnly — Mod Menu is never bundled, and the mod runs fine without it.
 deps.modmenu = "11.0.3"
+
+# ------------------------------------------------------------------ 1.21.3 (Java 21)
+# 1.21.2 shares this pack format with 1.21.3.
+["1.21.3"]
+mod.mc_releases = ["1.21.2", "1.21.3"]
+mod.pack_format = "42"
+mod.java = "21"
+
+[fabric."1.21.3"]
+mod.mc_compat = "~1.21.3"
+deps.fabric_api = "0.114.1+1.21.3"
+deps.modmenu = "12.0.1"
+
+# ------------------------------------------------------------------ 1.21.4 (Java 21)
+["1.21.4"]
+mod.mc_releases = ["1.21.4"]
+mod.pack_format = "46"
+mod.java = "21"
+
+[fabric."1.21.4"]
+mod.mc_compat = "~1.21.4"
+deps.fabric_api = "0.119.4+1.21.4"
+deps.modmenu = "13.0.4"
+
+# ------------------------------------------------------------------ 1.21.5 (Java 21)
+["1.21.5"]
+mod.mc_releases = ["1.21.5"]
+mod.pack_format = "55"
+mod.java = "21"
+
+[fabric."1.21.5"]
+mod.mc_compat = "~1.21.5"
+deps.fabric_api = "0.128.2+1.21.5"
+deps.modmenu = "14.0.2"
 
 # ------------------------------------------------------------------ 1.21.11 (Java 21)
 # Carries the 1.21.11 renames (ResourceLocation -> Identifier, ResourceKey#location ->

@@ -91,12 +91,29 @@ public final class LocateNextSavedData extends SavedData {
     }
     //?}
 
-    // 1.20.5 introduced SavedData.Factory; before it, the storage takes the loader and the
+    // 1.20.2 introduced SavedData.Factory; before it, the storage takes the loader and the
     // constructor as separate arguments and neither side sees a registry lookup.
-    //? if <1.20.5 {
+    //? if <1.20.2 {
     /*public static LocateNextSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage()
                 .computeIfAbsent(LocateNextSavedData::decode, LocateNextSavedData::new, FILE_ID);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        return encode(tag);
+    }
+    *///?}
+
+    // 1.20.2 through 1.20.4: SavedData.Factory exists, but its loader and SavedData#save still
+    // predate the registry lookup 1.20.5 added to both.
+    //? if >=1.20.2 && <1.20.5 {
+    /*public static LocateNextSavedData get(MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(factory(), FILE_ID);
+    }
+
+    private static SavedData.Factory<LocateNextSavedData> factory() {
+        return new SavedData.Factory<>(LocateNextSavedData::new, LocateNextSavedData::decode, null);
     }
 
     @Override
