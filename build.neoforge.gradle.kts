@@ -1,6 +1,6 @@
 plugins {
     id("net.neoforged.moddev") version "2.0.141"
-    id("neoforge-mutex")
+    id("minecraft-mutex")
 }
 
 // Fleet artifact convention: {ModName}-{loader}-{mc}-{version}.jar — see build.fabric.gradle.kts.
@@ -58,6 +58,10 @@ tasks {
             "neo_loader" to sc.properties.get<String>("deps.neo_loader"),
             "pack_format" to sc.properties.get<String>("mod.pack_format"),
             "java" to requiredJava.majorVersion,
+            // Only consumed by the legacy (1.20.4) mods.toml below — shared with Forge, which
+            // needs its own loader modid and range in the same template. See that file's comment.
+            "loader_dep" to "neoforge",
+            "loader_dep_range" to "[${sc.properties.get<String>("deps.neo_loader")},)",
         )
         props.forEach { (k, v) -> inputs.property(k, v) }
 

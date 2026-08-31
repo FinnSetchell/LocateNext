@@ -37,9 +37,16 @@ mod.mc_compat = "~1.20.1"
 deps.fabric_api = "0.92.11+1.20.1"
 deps.modmenu = ""
 
+# Forge's own line never stopped at the NeoForge fork, so it covers 1.20.1 too. Oldest and most
+# different of the eight Forge nodes: predates Forge's own 1.20.2 networking rewrite (SimpleChannel,
+# not the RegisterPayloadHandlerEvent registrar), and predates vanilla's CustomPacketPayload.
+[forge."1.20.1"]
+mod.mc_compat = "[1.20.1, 1.20.2)"
+deps.forge_version = "47.4.10"
+
 # ------------------------------------------------------------------ 1.20.4 (Java 17)
-# NeoForge-only for now — the earliest MC version NeoForge supports, since it forked from Forge
-# here. Pre-1.20.5, so its payloads use the older networking path, not CustomPacketPayload.
+# NeoForge forked from Forge here, so this is the earliest NeoForge version. Pre-1.20.5, so its
+# payloads use the older networking path, not CustomPacketPayload.
 ["1.20.4"]
 mod.mc_releases = ["1.20.4"]
 mod.pack_format = "22"
@@ -49,8 +56,11 @@ mod.java = "17"
 mod.mc_compat = "[1.20.4, 1.20.5)"
 deps.neo_loader = "20.4.251"
 
+[forge."1.20.4"]
+mod.mc_compat = "[1.20.4, 1.20.5)"
+deps.forge_version = "49.2.0"
+
 # ------------------------------------------------------------------ 1.20.6 (Java 21)
-# NeoForge-only for now.
 ["1.20.6"]
 mod.mc_releases = ["1.20.6"]
 mod.pack_format = "32"
@@ -59,6 +69,10 @@ mod.java = "21"
 [neoforge."1.20.6"]
 mod.mc_compat = "[1.20.6, 1.20.7)"
 deps.neo_loader = "20.6.139"
+
+[forge."1.20.6"]
+mod.mc_compat = "[1.20.6, 1.20.7)"
+deps.forge_version = "50.2.0"
 
 # ------------------------------------------------------------------ 1.21.1 (Java 21)
 ["1.21.1"]
@@ -76,8 +90,11 @@ deps.modmenu = "11.0.3"
 mod.mc_compat = "[1.21, 1.21.2)"
 deps.neo_loader = "21.1.249"
 
+[forge."1.21.1"]
+mod.mc_compat = "[1.21, 1.21.2)"
+deps.forge_version = "52.1.0"
+
 # ------------------------------------------------------------------ 1.21.3 (Java 21)
-# NeoForge-only for now.
 ["1.21.3"]
 mod.mc_releases = ["1.21.3"]
 mod.pack_format = "42"
@@ -87,8 +104,11 @@ mod.java = "21"
 mod.mc_compat = "[1.21.3, 1.21.4)"
 deps.neo_loader = "21.3.97"
 
+[forge."1.21.3"]
+mod.mc_compat = "[1.21.3, 1.21.4)"
+deps.forge_version = "53.1.0"
+
 # ------------------------------------------------------------------ 1.21.4 (Java 21)
-# NeoForge-only for now.
 ["1.21.4"]
 mod.mc_releases = ["1.21.4"]
 mod.pack_format = "46"
@@ -98,8 +118,11 @@ mod.java = "21"
 mod.mc_compat = "[1.21.4, 1.21.5)"
 deps.neo_loader = "21.4.157"
 
+[forge."1.21.4"]
+mod.mc_compat = "[1.21.4, 1.21.5)"
+deps.forge_version = "54.1.14"
+
 # ------------------------------------------------------------------ 1.21.5 (Java 21)
-# NeoForge-only for now.
 ["1.21.5"]
 mod.mc_releases = ["1.21.5"]
 mod.pack_format = "55"
@@ -108,6 +131,10 @@ mod.java = "21"
 [neoforge."1.21.5"]
 mod.mc_compat = "[1.21.5, 1.21.6)"
 deps.neo_loader = "21.5.98"
+
+[forge."1.21.5"]
+mod.mc_compat = "[1.21.5, 1.21.6)"
+deps.forge_version = "55.1.0"
 
 # ------------------------------------------------------------------ 1.21.11 (Java 21)
 # Carries the 1.21.11 renames (ResourceLocation -> Identifier, ResourceKey#location ->
@@ -125,6 +152,12 @@ deps.modmenu = ""
 [neoforge."1.21.11"]
 mod.mc_compat = "[1.21.11, 1.21.12)"
 deps.neo_loader = "21.11.45"
+
+# Forge 1.21.6+ shipped EventBus 7, a genuinely different mod-bus API (bus groups, compile-time
+# validated @SubscribeEvent) from every older Forge node above — see forge/LocateNextForgeEventBus7.
+[forge."1.21.11"]
+mod.mc_compat = "[1.21.11, 1.21.12)"
+deps.forge_version = "61.2.0"
 
 # ------------------------------------------------------------------ 26.1.2 (Java 25, unobfuscated)
 ["26.1.2"]

@@ -21,10 +21,10 @@ stonecutter parameters {
         tags(version, loader)
     }
 
-    // Provides `//? if fabric { ... //?}` conditionals so a NeoForge node can share this source
-    // tree later without restructuring it.
+    // Provides `//? if fabric { ... //?}` conditionals so a NeoForge or Forge node can share this
+    // source tree without restructuring it.
     constants {
-        match(loader, "fabric", "neoforge")
+        match(loader, "fabric", "neoforge", "forge")
     }
 
     replacements {

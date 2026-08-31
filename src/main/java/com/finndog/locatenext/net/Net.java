@@ -17,6 +17,28 @@ import net.minecraft.network.FriendlyByteBuf;
 //? if neoforge {
 /*import net.neoforged.neoforge.network.PacketDistributor;
 *///?}
+// Forge's own SimpleChannel needs an explicit channel reference to send on, unlike NeoForge's
+// PacketDistributor (no channel concept) or Fabric's connection-bound ServerPlayNetworking. That
+// channel is created and its messages registered in the loader entrypoint (see forge/), which is
+// also where its API genuinely forked across versions: 1.20.1 predates Forge's own move from
+// net.minecraftforge.network.simple.SimpleChannel to net.minecraftforge.network.SimpleChannel plus
+// the messageBuilder API, and 1.21.6 replaced FMLJavaModLoadingContext/getModEventBus with
+// EventBus 7's bus groups. Confirmed against the real 1.20.1/1.20.4/1.20.6/1.21.1 Forge sources.
+//? if forge && <1.20.4 {
+/*import net.minecraftforge.network.PacketDistributor;
+import com.finndog.locatenext.forge.LocateNextForgeLegacy;
+*///?}
+//? if forge && >=1.20.4 && <1.21.6 {
+/*import net.minecraftforge.network.PacketDistributor;
+import com.finndog.locatenext.forge.LocateNextForge;
+*///?}
+// EventBus 7 (1.21.6+) left SimpleChannel/ChannelBuilder/PacketDistributor untouched — confirmed
+// against the real 1.21.11 sources — so this send-side shape is identical to the block above it,
+// just pointed at LocateNextForgeEventBus7's channel.
+//? if forge && >=1.21.6 {
+/*import net.minecraftforge.network.PacketDistributor;
+import com.finndog.locatenext.forge.LocateNextForgeEventBus7;
+*///?}
 
 /**
  * The server half of networking, with the two Fabric eras and NeoForge behind one set of calls.
@@ -108,6 +130,15 @@ public final class Net {
         //? if neoforge && <1.20.5 {
         /*PacketDistributor.PLAYER.with(player).send(payload);
         *///?}
+        //? if forge && <1.20.4 {
+        /*LocateNextForgeLegacy.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
+        *///?}
+        //? if forge && >=1.20.4 && <1.21.6 {
+        /*LocateNextForge.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        *///?}
+        //? if forge && >=1.21.6 {
+        /*LocateNextForgeEventBus7.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        *///?}
     }
 
     public static void send(ServerPlayer player, NavStatePayload payload) {
@@ -124,6 +155,15 @@ public final class Net {
         *///?}
         //? if neoforge && <1.20.5 {
         /*PacketDistributor.PLAYER.with(player).send(payload);
+        *///?}
+        //? if forge && <1.20.4 {
+        /*LocateNextForgeLegacy.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
+        *///?}
+        //? if forge && >=1.20.4 && <1.21.6 {
+        /*LocateNextForge.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        *///?}
+        //? if forge && >=1.21.6 {
+        /*LocateNextForgeEventBus7.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
         *///?}
     }
 }

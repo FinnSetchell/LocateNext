@@ -3,9 +3,10 @@ package com.finndog.locatenext.net;
 import com.finndog.locatenext.LocateNext;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-// 1.20.5 introduced CustomPacketPayload; NeoForge's own pre-1.20.5 fork carries an equivalent
-// (simpler, id()-based) interface of its own, so only plain Fabric below 1.20.5 goes without it.
-//? if fabric && <1.20.5 {
+// CustomPacketPayload itself is a vanilla type that has existed since 1.20.4 (confirmed against
+// the actual 1.20.4 Forge sources — it predates the 1.20.5 Type/StreamCodec rework below). Only
+// 1.20.1, the one node any loader ships below 1.20.4, goes without it entirely.
+//? if <1.20.4 {
 /*
 *///?} else {
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -25,7 +26,7 @@ import net.minecraft.network.codec.StreamCodec;
  * @param index zero-based target, only read for {@link #OP_GOTO}
  */
 public record NavigatePayload(int op, int index)
-        //? if fabric && <1.20.5 {
+        //? if <1.20.4 {
         /*
         *///?} else {
         implements CustomPacketPayload

@@ -122,6 +122,38 @@ public final class LocateNextSavedData extends SavedData {
     }
     *///?}
 
+    // Forge's own pre-1.20.5 split is finer than NeoForge's: confirmed against the real
+    // 1.20.1/1.20.4 Forge sources (not guessed). 1.20.1 (predating the NeoForge fork point
+    // entirely) still has the plain vanilla Function/Supplier overload, same as Fabric above. But
+    // Forge 1.20.4 already carries its own three-argument SavedData.Factory (constructor,
+    // deserializer, DataFixTypes) — a third, distinct shape from both the plain overload and
+    // NeoForge's own two-argument Factory just above.
+    //? if forge && <1.20.4 {
+    /*public static LocateNextSavedData get(MinecraftServer server) {
+        return server.overworld().getDataStorage()
+                .computeIfAbsent(LocateNextSavedData::decode, LocateNextSavedData::new, FILE_ID);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        return encode(tag);
+    }
+    *///?}
+    //? if forge && >=1.20.4 && <1.20.5 {
+    /*public static LocateNextSavedData get(MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(factory(), FILE_ID);
+    }
+
+    private static SavedData.Factory<LocateNextSavedData> factory() {
+        return new SavedData.Factory<>(LocateNextSavedData::new, LocateNextSavedData::decode, null);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        return encode(tag);
+    }
+    *///?}
+
     //? if <1.21.5 {
     private static LocateNextSavedData decode(CompoundTag tag) {
         return CODEC.parse(NbtOps.INSTANCE, tag)
