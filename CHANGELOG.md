@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.3.0] - 2026-08-31
+
+Adds NeoForge and Forge alongside Fabric, and fills in the missing Minecraft versions, taking the
+build from 5 jars to 25.
+
+Fabric gains 1.20.4, 1.20.6, 1.21.3, 1.21.4 and 1.21.5. NeoForge covers 1.20.4 through 1.21.11.
+Forge covers 1.20.1 through 1.21.11. 26.1.2 and 26.2 stay Fabric-only.
+
+Networking is where the loaders diverge most, so it stays in `Net`/`ClientNet` rather than at the
+call sites, the same split 1.2.0 introduced for the payload-API boundary. Each loader needs its own
+registration and send path, and within a loader those paths changed again mid-range: NeoForge 1.20.4
+uses its fork's older `RegisterPayloadHandlerEvent`, 1.20.6 onward uses `PayloadRegistrar`, and
+1.21.11 moves client-to-server sends onto `ClientPacketDistributor`. Forge keeps `SimpleChannel`
+throughout, but 1.20.1 predates `CustomPacketPayload` entirely, and 1.21.11's EventBus 7 moves
+command, keybind, tick and datapack-sync events off the shared bus onto dedicated ones.
+
+Two version boundaries in the existing source turn out to have been wrong, and adding versions in the
+1.20.2 to 1.20.6 window is what exposed them. `ResourceLocation`'s named factory arrived in 1.21, not
+1.20.5, so 1.20.5 and 1.20.6 still take the public constructor. `SavedData.Factory` arrived in 1.20.2
+but did not take a registry lookup until 1.20.5, which is three eras rather than the two the code
+assumed, and both NeoForge and Forge ship their own 1.20.4 variants on top of that. Neither could
+fire before, because no node existed in that window.
+
+Loader-specific entrypoints live in flat per-loader files rather than nested conditionals, because
+Stonecutter does not resolve `//? if` markers nested inside another conditional's commented-out
+region.
+
+Known gap: every jar builds, but the NeoForge and Forge nodes have not been run in-game. Fabric
+1.21.1 and 1.21.11 remain the only paths tested end to end. Forge 1.21.11 is the least proven of the
+set, since EventBus 7 is a large change and it has only been compiled against.
+
+---
+
 ## [1.2.0] - 2026-08-12
 
 Adds 1.20.1, bringing the supported set to 1.20.1, 1.21.1, 1.21.11, 26.1.2 and 26.2.
