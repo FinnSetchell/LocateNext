@@ -38,6 +38,8 @@ deps.fabric_api = "0.92.11+1.20.1"
 deps.modmenu = ""
 
 # ------------------------------------------------------------------ 1.20.4 (Java 17)
+# NeoForge's earliest supported version, since it forked from Forge here. Pre-1.20.5, so its
+# payloads use the older networking path, not CustomPacketPayload.
 ["1.20.4"]
 mod.mc_releases = ["1.20.4"]
 mod.pack_format = "22"
@@ -47,6 +49,10 @@ mod.java = "17"
 mod.mc_compat = "~1.20.4"
 deps.fabric_api = "0.97.3+1.20.4"
 deps.modmenu = ""
+
+[neoforge."1.20.4"]
+mod.mc_compat = "[1.20.4, 1.20.5)"
+deps.neo_loader = "20.4.251"
 
 # ------------------------------------------------------------------ 1.20.6 (Java 21)
 # 1.20.5 raised the floor to Java 21 and shares this pack format with 1.20.6.
@@ -60,6 +66,10 @@ mod.mc_compat = "~1.20.6"
 deps.fabric_api = "0.100.8+1.20.6"
 deps.modmenu = "10.0.0"
 
+[neoforge."1.20.6"]
+mod.mc_compat = "[1.20.6, 1.20.7)"
+deps.neo_loader = "20.6.139"
+
 # ------------------------------------------------------------------ 1.21.1 (Java 21)
 ["1.21.1"]
 mod.mc_releases = ["1.21", "1.21.1"]
@@ -71,6 +81,10 @@ mod.mc_compat = "~1.21.1"
 deps.fabric_api = "0.116.14+1.21.1"
 # compileOnly — Mod Menu is never bundled, and the mod runs fine without it.
 deps.modmenu = "11.0.3"
+
+[neoforge."1.21.1"]
+mod.mc_compat = "[1.21, 1.21.2)"
+deps.neo_loader = "21.1.249"
 
 # ------------------------------------------------------------------ 1.21.3 (Java 21)
 # 1.21.2 shares this pack format with 1.21.3.
@@ -84,6 +98,10 @@ mod.mc_compat = "~1.21.3"
 deps.fabric_api = "0.114.1+1.21.3"
 deps.modmenu = "12.0.1"
 
+[neoforge."1.21.3"]
+mod.mc_compat = "[1.21.3, 1.21.4)"
+deps.neo_loader = "21.3.97"
+
 # ------------------------------------------------------------------ 1.21.4 (Java 21)
 ["1.21.4"]
 mod.mc_releases = ["1.21.4"]
@@ -95,6 +113,10 @@ mod.mc_compat = "~1.21.4"
 deps.fabric_api = "0.119.4+1.21.4"
 deps.modmenu = "13.0.4"
 
+[neoforge."1.21.4"]
+mod.mc_compat = "[1.21.4, 1.21.5)"
+deps.neo_loader = "21.4.157"
+
 # ------------------------------------------------------------------ 1.21.5 (Java 21)
 ["1.21.5"]
 mod.mc_releases = ["1.21.5"]
@@ -105,6 +127,10 @@ mod.java = "21"
 mod.mc_compat = "~1.21.5"
 deps.fabric_api = "0.128.2+1.21.5"
 deps.modmenu = "14.0.2"
+
+[neoforge."1.21.5"]
+mod.mc_compat = "[1.21.5, 1.21.6)"
+deps.neo_loader = "21.5.98"
 
 # ------------------------------------------------------------------ 1.21.11 (Java 21)
 # Carries the 1.21.11 renames (ResourceLocation -> Identifier, ResourceKey#location ->
@@ -118,6 +144,10 @@ mod.java = "21"
 mod.mc_compat = "~1.21.11"
 deps.fabric_api = "0.141.5+1.21.11"
 deps.modmenu = ""
+
+[neoforge."1.21.11"]
+mod.mc_compat = "[1.21.11, 1.21.12)"
+deps.neo_loader = "21.11.45"
 
 # ------------------------------------------------------------------ 26.1.2 (Java 25, unobfuscated)
 ["26.1.2"]

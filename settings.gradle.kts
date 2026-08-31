@@ -3,6 +3,7 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         maven("https://maven.fabricmc.net/") { name = "FabricMC" }
+        maven("https://maven.neoforged.net/releases/") { name = "NeoForged" }
         maven("https://maven.kikugie.dev/releases") { name = "KikuGie Releases" }
         maven("https://maven.kikugie.dev/snapshots") { name = "KikuGie Snapshots" }
     }
@@ -43,6 +44,16 @@ stonecutter {
         match("1.21.11", "fabric")
         match("26.1.2", "fabric")
         match("26.2", "fabric")
+
+        // NeoForge nodes. 1.20.4 is the earliest one NeoForge itself supports — it forked from
+        // Forge at 1.20.4, so there is no `net.neoforged:neoforge` artifact below it.
+        match("1.20.4", "neoforge")
+        match("1.20.6", "neoforge")
+        match("1.21.1", "neoforge")
+        match("1.21.3", "neoforge")
+        match("1.21.4", "neoforge")
+        match("1.21.5", "neoforge")
+        match("1.21.11", "neoforge")
 
         vcsVersion = "1.21.1-fabric"
     }

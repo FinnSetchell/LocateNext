@@ -3,7 +3,7 @@ package com.finndog.locatenext.client;
 // Compiled only where a usable Mod Menu artifact exists; see deps.modmenu in
 // stonecutter.properties.toml. The entrypoint is dropped from fabric.mod.json on the same
 // condition, so the jar never names a class it doesn't contain.
-//? if >=1.20.5 && <1.21.11 {
+//? if fabric && >=1.20.5 && <1.21.11 {
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 

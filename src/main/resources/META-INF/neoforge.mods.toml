@@ -1,0 +1,30 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "${license}"
+
+[[mods]]
+modId = "${id}"
+version = "${version}"
+displayName = "${name}"
+authors = "${author}"
+description = '''${description}'''
+logoFile = "assets/${id}/icon.png"
+displayURL = "https://github.com/FinnSetchell/LocateNext"
+# A dev tool that a server can run alone — commands work without the mod on the client, and the
+# keybinds/menu are just a convenience on top. Without this, NeoForge's mod-list handshake would
+# reject a vanilla client, or one on a different LocateNext version, from joining at all.
+displayTest = "IGNORE_ALL_VERSION"
+
+[[dependencies.${id}]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neo_loader},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${id}]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft}"
+ordering = "NONE"
+side = "BOTH"

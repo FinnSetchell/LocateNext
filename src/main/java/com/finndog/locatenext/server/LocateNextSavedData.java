@@ -92,7 +92,8 @@ public final class LocateNextSavedData extends SavedData {
     //?}
 
     // 1.20.2 introduced SavedData.Factory; before it, the storage takes the loader and the
-    // constructor as separate arguments and neither side sees a registry lookup.
+    // constructor as separate arguments and neither side sees a registry lookup. No NeoForge node
+    // goes below 1.20.4, so this branch is reached only by fabric.
     //? if <1.20.2 {
     /*public static LocateNextSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage()
@@ -106,14 +107,34 @@ public final class LocateNextSavedData extends SavedData {
     *///?}
 
     // 1.20.2 through 1.20.4: SavedData.Factory exists, but its loader and SavedData#save still
-    // predate the registry lookup 1.20.5 added to both.
-    //? if >=1.20.2 && <1.20.5 {
+    // predate the registry lookup 1.20.5 added to both. NeoForge's own 1.20.4 fork ships a
+    // differently-shaped Factory (see below), so this branch is fabric only.
+    //? if fabric && >=1.20.2 && <1.20.5 {
     /*public static LocateNextSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(factory(), FILE_ID);
     }
 
     private static SavedData.Factory<LocateNextSavedData> factory() {
         return new SavedData.Factory<>(LocateNextSavedData::new, LocateNextSavedData::decode, null);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        return encode(tag);
+    }
+    *///?}
+
+    // NeoForge's own 1.20.4 fork already carries a Factory-shaped computeIfAbsent, but a simpler
+    // one than vanilla's later version: its Factory takes a plain CompoundTag deserializer, with
+    // no registry lookup and no DataFixTypes slot either, so it needs its own branch rather than
+    // fitting either vanilla one.
+    //? if neoforge && <1.20.5 {
+    /*public static LocateNextSavedData get(MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(factory(), FILE_ID);
+    }
+
+    private static SavedData.Factory<LocateNextSavedData> factory() {
+        return new SavedData.Factory<>(LocateNextSavedData::new, LocateNextSavedData::decode);
     }
 
     @Override
