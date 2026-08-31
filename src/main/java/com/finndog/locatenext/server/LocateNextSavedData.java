@@ -92,11 +92,28 @@ public final class LocateNextSavedData extends SavedData {
     //?}
 
     // 1.20.5 introduced SavedData.Factory; before it, the storage takes the loader and the
-    // constructor as separate arguments and neither side sees a registry lookup.
-    //? if <1.20.5 {
+    // constructor as separate arguments and neither side sees a registry lookup. NeoForge's own
+    // 1.20.4 fork already carries a Factory-shaped computeIfAbsent, but a simpler one than
+    // vanilla's later version — its Factory takes a plain CompoundTag deserializer, with no
+    // registry lookup either, so it needs its own branch rather than fitting either vanilla one.
+    //? if fabric && <1.20.5 {
     /*public static LocateNextSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage()
                 .computeIfAbsent(LocateNextSavedData::decode, LocateNextSavedData::new, FILE_ID);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        return encode(tag);
+    }
+    *///?}
+    //? if neoforge && <1.20.5 {
+    /*public static LocateNextSavedData get(MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(factory(), FILE_ID);
+    }
+
+    private static SavedData.Factory<LocateNextSavedData> factory() {
+        return new SavedData.Factory<>(LocateNextSavedData::new, LocateNextSavedData::decode);
     }
 
     @Override

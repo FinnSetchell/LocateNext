@@ -22,7 +22,6 @@ import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
 import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 import java.util.ArrayList;
 import java.util.List;

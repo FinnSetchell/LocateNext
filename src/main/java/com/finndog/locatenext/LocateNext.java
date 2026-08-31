@@ -12,10 +12,15 @@ public final class LocateNext {
     }
 
     public static ResourceLocation id(String path) {
-        // 1.20.5 replaced the public constructor with named factory methods.
-        //? if >=1.20.5 {
+        // 1.20.5 replaced the public constructor with a namespace+path factory method, named
+        // tryBuild there; 1.21 renamed that same method to fromNamespaceAndPath.
+        //? if >=1.21 {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
-        //?} else {
+        //?}
+        //? if >=1.20.5 && <1.21 {
+        /*return ResourceLocation.tryBuild(MOD_ID, path);
+        *///?}
+        //? if <1.20.5 {
         /*return new ResourceLocation(MOD_ID, path);
         *///?}
     }

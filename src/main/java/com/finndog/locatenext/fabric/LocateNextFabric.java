@@ -1,5 +1,7 @@
 package com.finndog.locatenext.fabric;
 
+//? if fabric {
+
 import com.finndog.locatenext.LocateNext;
 import com.finndog.locatenext.command.LocateNextCommand;
 import com.finndog.locatenext.net.NavigatePayload;
@@ -88,3 +90,4 @@ public final class LocateNextFabric implements ModInitializer {
         NavigationManager.syncState(player);
     }
 }
+//?}

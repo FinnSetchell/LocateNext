@@ -92,6 +92,9 @@ tasks {
         props.forEach { (k, v) -> inputs.property(k, v) }
 
         filesMatching(listOf("fabric.mod.json", "pack.mcmeta")) { expand(props) }
+
+        // NeoForge-only metadata must not ship in the Fabric jar.
+        exclude("META-INF/mods.toml", "META-INF/neoforge.mods.toml")
     }
 
     register<Copy>("buildAndCollect") {

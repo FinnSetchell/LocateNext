@@ -1,5 +1,7 @@
 package com.finndog.locatenext.fabric;
 
+//? if fabric {
+
 import com.finndog.locatenext.client.ClientNet;
 import com.finndog.locatenext.client.ClientStructureIndex;
 import com.finndog.locatenext.client.LocateNextKeys;
@@ -16,3 +18,4 @@ public final class LocateNextFabricClient implements ClientModInitializer {
         LocateNextKeys.register();
     }
 }
+//?}
