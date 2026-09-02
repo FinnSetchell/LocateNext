@@ -62,7 +62,11 @@ tasks {
             // needs its own loader modid and range in the same template. See that file's comment.
             "loader_version_range" to sc.properties.get<String>("deps.fml_range"),
             "loader_dep" to "neoforge",
-            "loader_dep_range" to "[${sc.properties.get<String>("deps.neo_loader")},)",
+            // The declared floor, deliberately not the version this was built against. Declaring
+            // the build version locks the jar out of any instance a few patches behind: a NeoForge
+            // 21.1.230 instance rejected a jar built against 21.1.249 outright. Same reasoning as
+            // mod.loader_min for Fabric.
+            "loader_dep_range" to "[${sc.properties.get<String>("deps.neo_min")},)",
         )
         props.forEach { (k, v) -> inputs.property(k, v) }
 

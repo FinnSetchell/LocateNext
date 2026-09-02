@@ -61,7 +61,8 @@ tasks {
             "license" to sc.properties.get<String>("mod.license"),
             "minecraft" to sc.properties.get<String>("mod.mc_compat"),
             "loader_dep" to "forge",
-            "loader_dep_range" to "[$forgeVersion,)",
+            // Declared floor, not the build version — see the note in stonecutter.properties.toml.
+            "loader_dep_range" to "[${sc.properties.get<String>("deps.forge_min")},)",
             "pack_format" to sc.properties.get<String>("mod.pack_format"),
             "java" to requiredJava.majorVersion,
         )

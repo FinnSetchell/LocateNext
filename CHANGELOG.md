@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.2] - 2026-09-02
+
+Fixes the mod refusing to load on NeoForge and Forge installs that sit a few patches behind the one
+it was built against.
+
+Every jar declared its loader dependency as the exact version it was compiled with, so an install
+running anything older was rejected outright before the mod loaded at all. A NeoForge 21.1.230
+install refused a jar built against 21.1.249 over a 19-patch gap that changes nothing this mod uses.
+Four of the seven NeoForge versions were affected in practice. The declared floor is now the base of
+the loader's minor line, so any 21.1.x accepts the 1.21.1 jar. Forge carried the same fault and gets
+the same fix, though it happened to bite less often.
+
+This is the same mistake the Fabric side already had a note about, where declaring the development
+loader version had locked the mod out of an install pinned slightly behind it.
+
+---
+
 ## [1.3.1] - 2026-09-02
 
 Fixes two jars that 1.3.0 shipped broken, and drops a third that cannot currently be built. Every
