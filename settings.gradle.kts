@@ -57,8 +57,17 @@ stonecutter {
 
         // Forge nodes. Unlike NeoForge, Forge (net.minecraftforge) never stopped publishing for
         // its own version line after the NeoForge fork, so it covers the same range Fabric does.
-        match("1.20.1", "forge")
-        match("1.20.4", "forge")
+        // Forge only moved its production runtime to official mappings at 1.20.5. Below that it
+        // still runs on SRG names, so the jar must be reobfuscated, which ForgeGradle 7 cannot do.
+        // These two build through ModDevGradle's legacy Forge plugin instead. The node keeps the
+        // `-forge` name, so the loader constant and every `//? if forge` condition are unchanged.
+        version("1.20.1-forge", "1.20.1").buildscript("build.forge-legacy.gradle.kts")
+        // No 1.20.4 Forge node. It needs SRG reobfuscation like 1.20.1 does, but it falls in a gap
+        // with no toolchain that can build it: ForgeGradle 7 cannot reobfuscate at all, and
+        // ModDevGradle's legacy Forge plugin stops at 1.20.1 because that is where NeoForge forked.
+        // Shipping it unobfuscated produces a jar that loads and then crashes on the first
+        // Minecraft call, so the node is left out rather than shipped broken. Fabric and NeoForge
+        // both still cover 1.20.4.
         match("1.20.6", "forge")
         match("1.21.1", "forge")
         match("1.21.3", "forge")

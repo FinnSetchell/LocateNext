@@ -1,21 +1,26 @@
 plugins {
-    id("net.neoforged.moddev") version "2.0.141"
+    // Forge below 1.20.5 runs on SRG-named Minecraft, so the jar has to be reobfuscated out of the
+    // official names the source is written against. ForgeGradle 7 has no reobfuscation step at all,
+    // so those versions build cleanly and then die at runtime with NoSuchMethodError the moment
+    // they touch a Minecraft method. ModDevGradle's legacy Forge plugin does reobfuscate, and wires
+    // it into `jar` directly, so the rest of this script matches build.forge.gradle.kts.
+    id("net.neoforged.moddev.legacyforge") version "2.0.141"
     id("minecraft-mutex")
 }
 
 // Fleet artifact convention: {ModName}-{loader}-{mc}-{version}.jar — see build.fabric.gradle.kts.
+// The node is still named `-forge`, so the loader constant, the `//? if forge` conditionals and the
+// jar name are all identical to the ForgeGradle nodes. Only the toolchain underneath differs.
 version = sc.properties.get<String>("mod.version")
-base.archivesName = "${sc.properties.get<String>("mod.archive_name")}-neoforge-${sc.current.version}"
+base.archivesName = "${sc.properties.get<String>("mod.archive_name")}-forge-${sc.current.version}"
 
 // Declared per version in stonecutter.properties.toml.
 val requiredJava: JavaVersion = JavaVersion.toVersion(sc.properties.get<String>("mod.java"))
 
-// 1.20.4 predates vanilla's own CustomPacketPayload (added in 1.20.5) and NeoForge's
-// neoforge.mods.toml (added alongside it) — see net/Net.java and the manifest split below.
-val legacy: Boolean = sc.current.version == "1.20.4"
+val forgeVersion: String = sc.properties.get<String>("deps.forge_version")
 
-neoForge {
-    version = sc.properties.get<String>("deps.neo_loader")
+legacyForge {
+    version = "${sc.current.version}-$forgeVersion"
 
     mods {
         register(sc.properties.get<String>("mod.id")) {
@@ -55,39 +60,27 @@ tasks {
             "author" to sc.properties.get<String>("mod.author"),
             "license" to sc.properties.get<String>("mod.license"),
             "minecraft" to sc.properties.get<String>("mod.mc_compat"),
-            "neo_loader" to sc.properties.get<String>("deps.neo_loader"),
+            "loader_dep" to "forge",
+            "loader_dep_range" to "[$forgeVersion,)",
             "pack_format" to sc.properties.get<String>("mod.pack_format"),
             "java" to requiredJava.majorVersion,
-            // Only consumed by the legacy (1.20.4) mods.toml below — shared with Forge, which
-            // needs its own loader modid and range in the same template. See that file's comment.
-            "loader_version_range" to sc.properties.get<String>("deps.fml_range"),
-            "loader_dep" to "neoforge",
-            "loader_dep_range" to "[${sc.properties.get<String>("deps.neo_loader")},)",
         )
         props.forEach { (k, v) -> inputs.property(k, v) }
 
-        // 1.20.4 ships the classic mods.toml; 1.20.5+ ships neoforge.mods.toml. Only one of the
-        // two is ever templated or shipped — the other is dropped so its unreplaced `${}`
-        // placeholders never reach a jar.
-        if (legacy) {
-            filesMatching(listOf("META-INF/mods.toml", "pack.mcmeta")) { expand(props) }
-            exclude("META-INF/neoforge.mods.toml")
-        } else {
-            filesMatching(listOf("META-INF/neoforge.mods.toml", "pack.mcmeta")) { expand(props) }
-            exclude("META-INF/mods.toml")
-        }
+        filesMatching(listOf("META-INF/mods.toml", "pack.mcmeta")) { expand(props) }
 
-        // Fabric-only metadata must not ship in the NeoForge jar.
+        // Only Forge ships META-INF/mods.toml with a "forge" dependency; the other loaders' own
+        // metadata must not ship in this jar.
+        exclude("META-INF/neoforge.mods.toml")
         exclude("fabric.mod.json")
     }
 
-    // Required: moddev's Minecraft artifacts must not be created before Stonecutter has written
-    // the processed sources, or Gradle fails with an implicit-dependency validation error.
+    // Same ordering requirement as the other loaders: Minecraft artifacts must not be created
+    // before Stonecutter has written the processed sources.
     named("createMinecraftArtifacts") {
         dependsOn("stonecutterGenerate")
     }
 
-    // Same ordering requirement as above, for the same reason — see build.fabric.gradle.kts.
     withType<JavaCompile>().configureEach {
         dependsOn("stonecutterGenerate")
     }
@@ -95,7 +88,14 @@ tasks {
     register<Copy>("buildAndCollect") {
         group = "build"
         description = "Builds the mod jar and copies it to build/libs/{mod version}/"
-        from(jar.flatMap { it.archiveFile }, named<Jar>("sourcesJar").flatMap { it.archiveFile })
+        // Load-bearing: collect reobfJar, NOT jar. Under this plugin `jar` keeps the development
+        // artifact, in official names, and its archive is redirected to build/devlibs; reobfJar is
+        // the SRG-mapped one that a real 1.20.1 server can load. Collecting `jar` here produces a
+        // jar that loads and then dies with NoSuchMethodError on the first Minecraft call, which is
+        // precisely the bug this toolchain swap exists to fix.
+        val reobf = named("reobfJar")
+        dependsOn(reobf)
+        from(reobf.map { it.outputs.files }, named<Jar>("sourcesJar").flatMap { it.archiveFile })
         into(rootProject.layout.buildDirectory.file("libs/${sc.properties.get<String>("mod.version")}"))
     }
 }

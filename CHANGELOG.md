@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.3.1] - 2026-09-02
+
+Fixes two jars that 1.3.0 shipped broken, and drops a third that cannot currently be built. Every
+jar in 1.3.0 compiled, but compiling was never evidence that it would load, and three of them did
+not.
+
+NeoForge 1.20.6 was rejected before any of its code ran. The mod asked for language provider javafml
+4 or newer while NeoForge 20.6.139 supplies 3.0.45, so the loader refused the file outright. That
+floor is now declared per version rather than once for the whole matrix, which is what let a value
+valid everywhere else go unnoticed here.
+
+Forge 1.20.1 loaded, announced itself, and then crashed the server the moment a world registered its
+commands. Forge only moved its production runtime to official Minecraft names at 1.20.5; below that
+it still runs on the older internal names, so a jar built against the official ones has to be
+translated on the way out. It never was, so every Minecraft call it made pointed at a method the
+running game does not have. That version now builds through a toolchain that performs the
+translation.
+
+Forge 1.20.4 is no longer built. It needs the same translation 1.20.1 does, and no available
+toolchain performs it for that exact version: one cannot translate at all, and the other stops at
+1.20.1. A jar that loads and then crashes is worse than an absent one, so the version is left out
+rather than shipped broken. Fabric and NeoForge both still cover 1.20.4.
+
+Every jar in this release has been booted on a real dedicated server and confirmed to load.
+
+---
+
 ## [1.3.0] - 2026-08-31
 
 Adds NeoForge and Forge alongside Fabric, and fills in the missing Minecraft versions, taking the
