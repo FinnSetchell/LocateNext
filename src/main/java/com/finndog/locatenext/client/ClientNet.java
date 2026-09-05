@@ -23,6 +23,20 @@ import net.minecraft.network.FriendlyByteBuf;
 //? if neoforge && >=1.21.11 {
 /*import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 *///?}
+// Forge sends on the same SimpleChannel its entrypoint creates, so it needs an explicit channel
+// reference here exactly as Net does on the server side, and the channel lives in a different class
+// per era. 1.20.1 predates the ChannelBuilder rewrite and takes the target first.
+//? if forge && <1.20.4 {
+/*import com.finndog.locatenext.forge.LocateNextForgeLegacy;
+*///?}
+//? if forge && >=1.20.4 && <1.21.6 {
+/*import net.minecraftforge.network.PacketDistributor;
+import com.finndog.locatenext.forge.LocateNextForge;
+*///?}
+//? if forge && >=1.21.6 {
+/*import net.minecraftforge.network.PacketDistributor;
+import com.finndog.locatenext.forge.LocateNextForgeEventBus7;
+*///?}
 
 /**
  * The client half of networking. Same split as {@code Net}, kept in the client package so the
@@ -30,8 +44,10 @@ import net.minecraft.network.FriendlyByteBuf;
  *
  * <p>{@link #onStructureIndex} and {@link #onNavState} are Fabric only — NeoForge registers its
  * client-bound handlers alongside the server-bound ones, from the NeoForge entrypoint's single
- * {@code RegisterPayloadHandlersEvent} listener. {@link #send} covers both loaders, since
- * {@code ClientStructureIndex} calls it directly regardless of which one is active.
+ * {@code RegisterPayloadHandlersEvent} listener. {@link #send} covers all three loaders, since
+ * {@code ClientStructureIndex} calls it directly regardless of which one is active. Every loader
+ * needs a branch in both send methods: a missing one compiles to an empty body, so the GUI keeps
+ * working while every click and keypress is silently dropped.
  */
 public final class ClientNet {
 
@@ -91,6 +107,15 @@ public final class ClientNet {
         //? if neoforge && >=1.21.11 {
         /*ClientPacketDistributor.sendToServer(payload);
         *///?}
+        //? if forge && <1.20.4 {
+        /*LocateNextForgeLegacy.CHANNEL.sendToServer(payload);
+        *///?}
+        //? if forge && >=1.20.4 && <1.21.6 {
+        /*LocateNextForge.CHANNEL.send(payload, PacketDistributor.SERVER.noArg());
+        *///?}
+        //? if forge && >=1.21.6 {
+        /*LocateNextForgeEventBus7.CHANNEL.send(payload, PacketDistributor.SERVER.noArg());
+        *///?}
     }
 
     public static void send(SelectModPayload payload) {
@@ -114,6 +139,15 @@ public final class ClientNet {
         *///?}
         //? if neoforge && >=1.21.11 {
         /*ClientPacketDistributor.sendToServer(payload);
+        *///?}
+        //? if forge && <1.20.4 {
+        /*LocateNextForgeLegacy.CHANNEL.sendToServer(payload);
+        *///?}
+        //? if forge && >=1.20.4 && <1.21.6 {
+        /*LocateNextForge.CHANNEL.send(payload, PacketDistributor.SERVER.noArg());
+        *///?}
+        //? if forge && >=1.21.6 {
+        /*LocateNextForgeEventBus7.CHANNEL.send(payload, PacketDistributor.SERVER.noArg());
         *///?}
     }
 }

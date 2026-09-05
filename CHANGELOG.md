@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1] - 2026-09-05
+
+### Fixed
+- On Forge, clicking a structure or pressing the arrow keys now works. The menu opened but every selection was ignored
+
+---
+
 ## [1.4.0] - 2026-09-05
 
 ### Added
