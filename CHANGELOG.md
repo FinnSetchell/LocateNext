@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0] - 2026-09-05
+
+### Added
+- Forge support on Minecraft 26.1.2 and 26.2
+
+---
+
 ## [1.3.2] - 2026-09-02
 
 Fixes the mod refusing to load on NeoForge and Forge installs that sit a few patches behind the one

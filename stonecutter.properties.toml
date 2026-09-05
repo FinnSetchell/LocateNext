@@ -9,7 +9,7 @@ mod.name = "LocateNext"
 # Artifact stem for the fleet filename convention {ModName}-{loader}-{mc}-{version}.jar.
 mod.archive_name = "LocateNext"
 mod.group = "com.finndog.locatenext"
-mod.version = "1.3.2"
+mod.version = "1.4.0"
 mod.author = "FinnSetchell"
 mod.license = "MIT"
 mod.description = "A structure-testing dev tool: pick a mod, then arrow-key your way through every structure it adds, locating and teleporting to each in turn."
