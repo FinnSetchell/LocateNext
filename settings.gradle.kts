@@ -74,6 +74,10 @@ stonecutter {
         match("1.21.4", "forge")
         match("1.21.5", "forge")
         match("1.21.11", "forge")
+        // 26.1 and later ship unobfuscated, same as Fabric and NeoForge above, so these build
+        // through the plain ForgeGradle 7 script rather than the legacy reobfuscating one.
+        match("26.1.2", "forge")
+        match("26.2", "forge")
 
         vcsVersion = "1.21.1-fabric"
     }

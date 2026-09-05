@@ -218,6 +218,13 @@ mod.mc_compat = "~26.1"
 deps.fabric_api = "0.155.2+26.1.2"
 deps.modmenu = ""
 
+# Forge's 64.x line. Uses the same EventBus 7 API as 1.21.11 above (see
+# forge/LocateNextForgeEventBus7) — the >=1.21.6 condition already covers this node.
+[forge."26.1.2"]
+mod.mc_compat = "[26.1.2, 26.1.3)"
+deps.forge_version = "64.1.0"
+deps.forge_min = "64"
+
 # ------------------------------------------------------------------ 26.2 (Java 25, unobfuscated)
 # From 26.1 Minecraft ships unobfuscated, so loom-back-compat swaps to plain fabric-loom here and
 # `loomx.applyMojangMappings()` becomes a no-op.
@@ -235,3 +242,10 @@ deps.fabric_api = "0.157.0+26.2"
 # compiling against it fails on `class_437`. The integration is a convenience (its config button
 # opens the picker), so 26.2 simply ships without it rather than holding the port up.
 deps.modmenu = ""
+
+# Forge's 65.x line. Same EventBus 7 API as 1.21.11 and 26.1.2 above (see
+# forge/LocateNextForgeEventBus7) — the >=1.21.6 condition already covers this node.
+[forge."26.2"]
+mod.mc_compat = "[26.2, 26.3)"
+deps.forge_version = "65.1.0"
+deps.forge_min = "65"
