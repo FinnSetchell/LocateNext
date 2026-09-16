@@ -86,7 +86,7 @@ public final class LocateNextKeys {
         ClientTickEvents.END_CLIENT_TICK.register(client -> tick());
     }
 
-    // Three independent, mutually exclusive conditions rather than an if/elif/else chain — see
+    // Three independent, mutually exclusive conditions rather than an if/elif/else chain; see
     // the same note on LocateNextSavedData#get.
     private static KeyMapping bind(String translationKey, int key) {
         //? if >=26.3 {
@@ -104,7 +104,7 @@ public final class LocateNextKeys {
     }
     //?}
 
-    // Split into two sibling blocks rather than nesting a >=26.3 marker inside this one — Stonecutter
+    // Split into two sibling blocks rather than nesting a >=26.3 marker inside this one; Stonecutter
     // does not resolve //? markers nested inside another conditional's commented-out region (see the
     // neoforge/ entrypoint files for the same rule applied to whole classes).
     //? if neoforge && <26.3 {
@@ -125,7 +125,7 @@ public final class LocateNextKeys {
     }
     *///?}
 
-    // 26.3 dropped GLFW entirely and renamed InputConstants.Type.KEYSYM to KEYBOARD — see the
+    // 26.3 dropped GLFW entirely and renamed InputConstants.Type.KEYSYM to KEYBOARD; see the
     // import note above.
     //? if neoforge && >=26.3 {
     /*public static void create() {

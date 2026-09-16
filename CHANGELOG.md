@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0] - 2026-09-16
+
+### Added
+- Support for Minecraft 26.3 on Fabric and NeoForge
+
+---
+
 ## [1.4.1] - 2026-09-05
 
 ### Fixed

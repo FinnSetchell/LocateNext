@@ -9,7 +9,7 @@ mod.name = "LocateNext"
 # Artifact stem for the fleet filename convention {ModName}-{loader}-{mc}-{version}.jar.
 mod.archive_name = "LocateNext"
 mod.group = "com.finndog.locatenext"
-mod.version = "1.4.1"
+mod.version = "1.5.0"
 mod.author = "FinnSetchell"
 mod.license = "MIT"
 mod.description = "A structure-testing dev tool: pick a mod, then arrow-key your way through every structure it adds, locating and teleporting to each in turn."
@@ -268,7 +268,7 @@ deps.modmenu = ""
 # NeoForge moved to a four-part version scheme with a -beta qualifier for the 26.x era (compare
 # 21.11.45 on the old scheme). Only two builds exist for this release: 26.3.0.0-beta and
 # 26.3.0.1-beta. deps.neo_min stays 26.3.0.0-beta rather than the exact build for the usual reason
-# (see the top-of-file note on mod.loader_min) — under Maven version ordering a -beta qualifier
+# (see the top-of-file note on mod.loader_min). Under Maven version ordering a -beta qualifier
 # sorts BELOW the plain release, so a floor of "26.3.0" would reject both actual builds.
 [neoforge."26.3"]
 mod.mc_compat = "[26.3, 26.4)"
