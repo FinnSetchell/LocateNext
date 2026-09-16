@@ -249,3 +249,18 @@ deps.modmenu = ""
 mod.mc_compat = "[26.2, 26.3)"
 deps.forge_version = "65.1.0"
 deps.forge_min = "65"
+
+# ----- 26.3 (Java 25, unobfuscated)
+["26.3"]
+mod.mc_releases = ["26.3"]
+mod.pack_format = "97"
+mod.java = "25"
+
+[fabric."26.3"]
+mod.mc_compat = "~26.3"
+deps.fabric_api = "0.160.6+26.3"
+# Blank = no Mod Menu integration on this version. Mod Menu's 26.x artifact still carries
+# intermediary references that Loom does not remap against an un-obfuscated Minecraft, so
+# compiling against it fails on `class_437`. The integration is a convenience (its config button
+# opens the picker), so 26.3 simply ships without it rather than holding the port up.
+deps.modmenu = ""

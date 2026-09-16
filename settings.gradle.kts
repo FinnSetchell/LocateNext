@@ -44,6 +44,7 @@ stonecutter {
         match("1.21.11", "fabric")
         match("26.1.2", "fabric")
         match("26.2", "fabric")
+        match("26.3", "fabric")
 
         // NeoForge nodes. 1.20.4 is the earliest one NeoForge itself supports — it forked from
         // Forge at 1.20.4, so there is no `net.neoforged:neoforge` artifact below it.

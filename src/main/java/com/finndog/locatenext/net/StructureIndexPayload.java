@@ -33,6 +33,25 @@ public record StructureIndexPayload(List<ResourceLocation> structures)
 
     public static final ResourceLocation ID = LocateNext.id("structure_index");
 
+    // 26.3 dropped FriendlyByteBuf's writeCollection/readList convenience methods (collections now
+    // go through ByteBufCodecs' composable StreamCodecs instead), so the list is walked by hand.
+    //? if >=26.3 {
+    /*public void write(FriendlyByteBuf buf) {
+        buf.writeVarInt(this.structures.size());
+        for (ResourceLocation entry : this.structures) {
+            buf.writeResourceLocation(entry);
+        }
+    }
+
+    public static StructureIndexPayload read(FriendlyByteBuf buf) {
+        int size = buf.readVarInt();
+        List<ResourceLocation> structures = new java.util.ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            structures.add(buf.readResourceLocation());
+        }
+        return new StructureIndexPayload(structures);
+    }
+    *///?} else {
     public void write(FriendlyByteBuf buf) {
         buf.writeCollection(this.structures, FriendlyByteBuf::writeResourceLocation);
     }
@@ -40,6 +59,7 @@ public record StructureIndexPayload(List<ResourceLocation> structures)
     public static StructureIndexPayload read(FriendlyByteBuf buf) {
         return new StructureIndexPayload(buf.readList(FriendlyByteBuf::readResourceLocation));
     }
+    //?}
 
     // Only NeoForge's pre-1.20.5 CustomPacketPayload requires this; harmless as a plain extra
     // method everywhere else.

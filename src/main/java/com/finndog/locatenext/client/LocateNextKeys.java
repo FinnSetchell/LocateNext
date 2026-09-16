@@ -6,7 +6,11 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.finndog.locatenext.LocateNext;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+// 26.3 dropped GLFW entirely (Minecraft's windowing moved to SDL) and InputConstants gained its
+// own KEY_* constants, so GLFW's raw key codes are only needed below that.
+//? if <26.3 {
 import org.lwjgl.glfw.GLFW;
+//?}
 
 //? if fabric {
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -56,21 +60,44 @@ public final class LocateNextKeys {
     }
 
     //? if fabric {
+    // 26.3 dropped GLFW's raw key codes for InputConstants' own KEY_* constants; see the import
+    // note above.
+    //? if >=26.3 {
+    /*private static final int KEY_RIGHT = InputConstants.KEY_RIGHT;
+    private static final int KEY_LEFT = InputConstants.KEY_LEFT;
+    private static final int KEY_UP = InputConstants.KEY_UP;
+    private static final int KEY_DOWN = InputConstants.KEY_DOWN;
+    private static final int KEY_BACKSLASH = InputConstants.KEY_BACKSLASH;
+    *///?} else {
+    private static final int KEY_RIGHT = GLFW.GLFW_KEY_RIGHT;
+    private static final int KEY_LEFT = GLFW.GLFW_KEY_LEFT;
+    private static final int KEY_UP = GLFW.GLFW_KEY_UP;
+    private static final int KEY_DOWN = GLFW.GLFW_KEY_DOWN;
+    private static final int KEY_BACKSLASH = GLFW.GLFW_KEY_BACKSLASH;
+    //?}
+
     public static void register() {
-        next = bind("key.locatenext.next", GLFW.GLFW_KEY_RIGHT);
-        prev = bind("key.locatenext.prev", GLFW.GLFW_KEY_LEFT);
-        variantNext = bind("key.locatenext.variant_next", GLFW.GLFW_KEY_UP);
-        variantPrev = bind("key.locatenext.variant_prev", GLFW.GLFW_KEY_DOWN);
-        menu = bind("key.locatenext.screen", GLFW.GLFW_KEY_BACKSLASH);
+        next = bind("key.locatenext.next", KEY_RIGHT);
+        prev = bind("key.locatenext.prev", KEY_LEFT);
+        variantNext = bind("key.locatenext.variant_next", KEY_UP);
+        variantPrev = bind("key.locatenext.variant_prev", KEY_DOWN);
+        menu = bind("key.locatenext.screen", KEY_BACKSLASH);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> tick());
     }
 
+    // Three independent, mutually exclusive conditions rather than an if/elif/else chain — see
+    // the same note on LocateNextSavedData#get.
     private static KeyMapping bind(String translationKey, int key) {
-        //? if >=26.1 {
+        //? if >=26.3 {
+        /*return KeyMappingHelper.registerKeyMapping(
+                new KeyMapping(translationKey, InputConstants.Type.KEYBOARD, key, CATEGORY));
+        *///?}
+        //? if >=26.1 && <26.3 {
         /*return KeyMappingHelper.registerKeyMapping(
                 new KeyMapping(translationKey, InputConstants.Type.KEYSYM, key, CATEGORY));
-        *///?} else {
+        *///?}
+        //? if <26.1 {
         return KeyBindingHelper.registerKeyBinding(
                 new KeyMapping(translationKey, InputConstants.Type.KEYSYM, key, CATEGORY));
         //?}
