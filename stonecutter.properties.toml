@@ -250,7 +250,7 @@ mod.mc_compat = "[26.2, 26.3)"
 deps.forge_version = "65.1.0"
 deps.forge_min = "65"
 
-# ----- 26.3 (Java 25, unobfuscated)
+# ------------------------------------------------------------------ 26.3 (Java 25, unobfuscated)
 ["26.3"]
 mod.mc_releases = ["26.3"]
 mod.pack_format = "97"
@@ -264,3 +264,14 @@ deps.fabric_api = "0.160.6+26.3"
 # compiling against it fails on `class_437`. The integration is a convenience (its config button
 # opens the picker), so 26.3 simply ships without it rather than holding the port up.
 deps.modmenu = ""
+
+# NeoForge moved to a four-part version scheme with a -beta qualifier for the 26.x era (compare
+# 21.11.45 on the old scheme). Only two builds exist for this release: 26.3.0.0-beta and
+# 26.3.0.1-beta. deps.neo_min stays 26.3.0.0-beta rather than the exact build for the usual reason
+# (see the top-of-file note on mod.loader_min) — under Maven version ordering a -beta qualifier
+# sorts BELOW the plain release, so a floor of "26.3.0" would reject both actual builds.
+[neoforge."26.3"]
+mod.mc_compat = "[26.3, 26.4)"
+deps.neo_loader = "26.3.0.1-beta"
+deps.neo_min = "26.3.0.0-beta"
+deps.fml_range = "[4,)"

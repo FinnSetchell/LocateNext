@@ -104,13 +104,36 @@ public final class LocateNextKeys {
     }
     //?}
 
-    //? if neoforge {
+    // Split into two sibling blocks rather than nesting a >=26.3 marker inside this one — Stonecutter
+    // does not resolve //? markers nested inside another conditional's commented-out region (see the
+    // neoforge/ entrypoint files for the same rule applied to whole classes).
+    //? if neoforge && <26.3 {
     /*public static void create() {
         next = new KeyMapping("key.locatenext.next", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT, CATEGORY);
         prev = new KeyMapping("key.locatenext.prev", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT, CATEGORY);
         variantNext = new KeyMapping("key.locatenext.variant_next", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UP, CATEGORY);
         variantPrev = new KeyMapping("key.locatenext.variant_prev", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_DOWN, CATEGORY);
         menu = new KeyMapping("key.locatenext.screen", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_BACKSLASH, CATEGORY);
+    }
+
+    public static void registerAll(RegisterKeyMappingsEvent event) {
+        event.register(next);
+        event.register(prev);
+        event.register(variantNext);
+        event.register(variantPrev);
+        event.register(menu);
+    }
+    *///?}
+
+    // 26.3 dropped GLFW entirely and renamed InputConstants.Type.KEYSYM to KEYBOARD — see the
+    // import note above.
+    //? if neoforge && >=26.3 {
+    /*public static void create() {
+        next = new KeyMapping("key.locatenext.next", InputConstants.Type.KEYBOARD, InputConstants.KEY_RIGHT, CATEGORY);
+        prev = new KeyMapping("key.locatenext.prev", InputConstants.Type.KEYBOARD, InputConstants.KEY_LEFT, CATEGORY);
+        variantNext = new KeyMapping("key.locatenext.variant_next", InputConstants.Type.KEYBOARD, InputConstants.KEY_UP, CATEGORY);
+        variantPrev = new KeyMapping("key.locatenext.variant_prev", InputConstants.Type.KEYBOARD, InputConstants.KEY_DOWN, CATEGORY);
+        menu = new KeyMapping("key.locatenext.screen", InputConstants.Type.KEYBOARD, InputConstants.KEY_BACKSLASH, CATEGORY);
     }
 
     public static void registerAll(RegisterKeyMappingsEvent event) {
