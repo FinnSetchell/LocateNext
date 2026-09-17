@@ -293,7 +293,9 @@ public final class LocateNextScreen extends Screen {
         }
         double mouseX = event.x();
         double mouseY = event.y();
-        if (event.button() != 0) {
+        // Never a literal: 26.3 moved input from GLFW to SDL, which numbers mouse buttons from 1, so
+        // a hardcoded 0 silently rejected every left click there while hover still worked.
+        if (event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
     *///?} else {

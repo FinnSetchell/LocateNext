@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1] - 2026-09-17
+
+### Fixed
+- On Minecraft 26.3, clicking a mod or structure in the menu now works
+
+---
+
 ## [1.5.0] - 2026-09-16
 
 ### Added
