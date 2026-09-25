@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0] - 2026-09-25
+
+### Added
+- Support for Minecraft 1.21.10 on Fabric, NeoForge and Forge
+- NeoForge support on Minecraft 26.1.2 and 26.2
+
+---
+
 ## [1.5.1] - 2026-09-17
 
 ### Fixed
