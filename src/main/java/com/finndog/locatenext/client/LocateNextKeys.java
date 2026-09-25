@@ -2,7 +2,7 @@ package com.finndog.locatenext.client;
 
 import com.finndog.locatenext.net.NavigatePayload;
 import com.mojang.blaze3d.platform.InputConstants;
-// Unconditional: 1.21.11's keybind Category is built from a mod id, below the 26.1 module rename.
+// Unconditional: 1.21.9's keybind Category is built from a mod id, below the 26.1 module rename.
 import com.finndog.locatenext.LocateNext;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -42,9 +42,9 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
  */
 public final class LocateNextKeys {
 
-    // 1.21.11 made the category a registered value keyed by an Identifier rather than a bare
+    // 1.21.9 made the category a registered value keyed by an Identifier rather than a bare
     // translation key, so the lang file carries both spellings.
-    //? if >=1.21.11 {
+    //? if >=1.21.9 {
     /*private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(LocateNext.id("main"));
     *///?} else {
     private static final String CATEGORY = "key.categories.locatenext";

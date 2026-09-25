@@ -41,6 +41,7 @@ stonecutter {
         match("1.21.3", "fabric")
         match("1.21.4", "fabric")
         match("1.21.5", "fabric")
+        match("1.21.10", "fabric")
         match("1.21.11", "fabric")
         match("26.1.2", "fabric")
         match("26.2", "fabric")
@@ -54,6 +55,7 @@ stonecutter {
         match("1.21.3", "neoforge")
         match("1.21.4", "neoforge")
         match("1.21.5", "neoforge")
+        match("1.21.10", "neoforge")
         match("1.21.11", "neoforge")
         match("26.1.2", "neoforge")
         match("26.2", "neoforge")
@@ -77,6 +79,7 @@ stonecutter {
         match("1.21.3", "forge")
         match("1.21.4", "forge")
         match("1.21.5", "forge")
+        match("1.21.10", "forge")
         match("1.21.11", "forge")
         // 26.1 and later ship unobfuscated, same as Fabric and NeoForge above, so these build
         // through the plain ForgeGradle 7 script rather than the legacy reobfuscating one.

@@ -181,6 +181,35 @@ mod.mc_compat = "[1.21.5, 1.21.6)"
 deps.forge_version = "55.1.0"
 deps.forge_min = "55"
 
+# ------------------------------------------------------------------ 1.21.10 (Java 21)
+# Same resource pack format as 1.21.9 (69.0). Sits below 1.21.11's ResourceLocation -> Identifier
+# rename and the 26.1 GUI/key-mapping rework, but ABOVE the 1.21.9 input rework: GuiEventListener's
+# mouseClicked takes a MouseButtonEvent here already, and KeyMapping.Category exists. See the
+# >=1.21.9 conditions in client/LocateNextScreen.java and client/LocateNextKeys.java.
+["1.21.10"]
+mod.mc_releases = ["1.21.9", "1.21.10"]
+mod.pack_format = "69"
+mod.java = "21"
+
+[fabric."1.21.10"]
+mod.mc_compat = "~1.21.10"
+deps.fabric_api = "0.138.4+1.21.10"
+deps.modmenu = "16.0.1"
+
+[neoforge."1.21.10"]
+mod.mc_compat = "[1.21.10, 1.21.11)"
+# The floor is deliberately NOT the build version: instances run older builds, and a `-beta`
+# qualifier sorts BELOW the plain release under Maven version ordering, so a floor of "21.10.0"
+# would reject 21.10.x-beta builds. 21.10.0-beta accepts 21.10.64, 21.10.63 and 21.10.0-beta alike.
+deps.neo_loader = "21.10.64"
+deps.neo_min = "21.10.0-beta"
+deps.fml_range = "[4,)"
+
+[forge."1.21.10"]
+mod.mc_compat = "[1.21.10, 1.21.11)"
+deps.forge_version = "60.1.0"
+deps.forge_min = "60"
+
 # ------------------------------------------------------------------ 1.21.11 (Java 21)
 # Carries the 1.21.11 renames (ResourceLocation -> Identifier, ResourceKey#location ->
 # #identifier, the Commands permission set) but sits BELOW 26.1's GUI and key-mapping rework.

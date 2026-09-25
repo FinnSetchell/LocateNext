@@ -15,12 +15,15 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 *///?}
-// NeoForge moved the client-to-server send from PacketDistributor to a dedicated class at
-// 1.21.11; both are covered so send() keeps the same call shape either side of that boundary.
-//? if neoforge && <1.21.11 {
+// NeoForge moved the client-to-server send from PacketDistributor to a dedicated class by
+// 1.21.10 (confirmed by compiling against the real 21.10.64 artifact: PacketDistributor carries
+// no sendToServer overload there at all, only the server-to-client sendTo* methods; javap on the
+// same jar confirms ClientPacketDistributor.sendToServer is what exists). Both are covered so
+// send() keeps the same call shape either side of that boundary.
+//? if neoforge && <1.21.9 {
 /*import net.neoforged.neoforge.network.PacketDistributor;
 *///?}
-//? if neoforge && >=1.21.11 {
+//? if neoforge && >=1.21.9 {
 /*import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 *///?}
 // Forge sends on the same SimpleChannel its entrypoint creates, so it needs an explicit channel
@@ -98,13 +101,13 @@ public final class ClientNet {
             ClientPlayNetworking.send(NavigatePayload.ID, buf);
         }
         *///?}
-        //? if neoforge && >=1.20.5 && <1.21.11 {
+        //? if neoforge && >=1.20.5 && <1.21.9 {
         /*PacketDistributor.sendToServer(payload);
         *///?}
         //? if neoforge && <1.20.5 {
         /*PacketDistributor.SERVER.noArg().send(payload);
         *///?}
-        //? if neoforge && >=1.21.11 {
+        //? if neoforge && >=1.21.9 {
         /*ClientPacketDistributor.sendToServer(payload);
         *///?}
         //? if forge && <1.20.4 {
@@ -131,13 +134,13 @@ public final class ClientNet {
             ClientPlayNetworking.send(SelectModPayload.ID, buf);
         }
         *///?}
-        //? if neoforge && >=1.20.5 && <1.21.11 {
+        //? if neoforge && >=1.20.5 && <1.21.9 {
         /*PacketDistributor.sendToServer(payload);
         *///?}
         //? if neoforge && <1.20.5 {
         /*PacketDistributor.SERVER.noArg().send(payload);
         *///?}
-        //? if neoforge && >=1.21.11 {
+        //? if neoforge && >=1.21.9 {
         /*ClientPacketDistributor.sendToServer(payload);
         *///?}
         //? if forge && <1.20.4 {
