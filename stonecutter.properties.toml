@@ -218,6 +218,14 @@ mod.mc_compat = "~26.1"
 deps.fabric_api = "0.155.2+26.1.2"
 deps.modmenu = ""
 
+# NeoForge's 26.1.2 build the instance runs is well past its own first release (26.1.2.71), so
+# deps.neo_min stays the .0-beta base per the usual floor convention (see top-of-file note).
+[neoforge."26.1.2"]
+mod.mc_compat = "[26.1.2, 26.1.3)"
+deps.neo_loader = "26.1.2.109"
+deps.neo_min = "26.1.2.0-beta"
+deps.fml_range = "[4,)"
+
 # Forge's 64.x line. Uses the same EventBus 7 API as 1.21.11 above (see
 # forge/LocateNextForgeEventBus7) — the >=1.21.6 condition already covers this node.
 [forge."26.1.2"]
@@ -242,6 +250,14 @@ deps.fabric_api = "0.157.0+26.2"
 # compiling against it fails on `class_437`. The integration is a convenience (its config button
 # opens the picker), so 26.2 simply ships without it rather than holding the port up.
 deps.modmenu = ""
+
+# Built against the instance's own early beta (26.2.0.6-beta) rather than the latest 26.2 build,
+# on purpose: it guarantees the jar never references anything newer than what that instance ships.
+[neoforge."26.2"]
+mod.mc_compat = "[26.2, 26.3)"
+deps.neo_loader = "26.2.0.6-beta"
+deps.neo_min = "26.2.0.0-beta"
+deps.fml_range = "[4,)"
 
 # Forge's 65.x line. Same EventBus 7 API as 1.21.11 and 26.1.2 above (see
 # forge/LocateNextForgeEventBus7) — the >=1.21.6 condition already covers this node.

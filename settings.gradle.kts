@@ -55,6 +55,8 @@ stonecutter {
         match("1.21.4", "neoforge")
         match("1.21.5", "neoforge")
         match("1.21.11", "neoforge")
+        match("26.1.2", "neoforge")
+        match("26.2", "neoforge")
         match("26.3", "neoforge")
 
         // Forge nodes. Unlike NeoForge, Forge (net.minecraftforge) never stopped publishing for
