@@ -1,5 +1,6 @@
 package com.finndog.locatenext.server;
 
+import com.finndog.locatenext.server.compat.MoogsPathsCompat;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -11,8 +12,10 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.structure.Structure;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,7 +56,19 @@ public final class StructureCatalog {
 
     /** Namespace -> structure ids, both sorted, so index N always means the same structure. */
     public static Map<String, List<ResourceLocation>> byNamespace(MinecraftServer server) {
-        return group(registry(server).keySet());
+        return group(structureAndNetworkIds(server));
+    }
+
+    /** Every registered structure id, plus Moog's Paths network ids when that mod is present. */
+    private static Collection<ResourceLocation> structureAndNetworkIds(MinecraftServer server) {
+        Set<ResourceLocation> structures = registry(server).keySet();
+        List<ResourceLocation> networks = MoogsPathsCompat.networks(server);
+        if (networks.isEmpty()) {
+            return structures;
+        }
+        Set<ResourceLocation> all = new LinkedHashSet<>(structures);
+        all.addAll(networks);
+        return all;
     }
 
     public static Map<String, List<ResourceLocation>> group(Iterable<ResourceLocation> ids) {
@@ -71,7 +86,7 @@ public final class StructureCatalog {
 
     /** Flat, sorted id list — the wire format for the client-side index. */
     public static List<ResourceLocation> allIds(MinecraftServer server) {
-        List<ResourceLocation> ids = new ArrayList<>(registry(server).keySet());
+        List<ResourceLocation> ids = new ArrayList<>(structureAndNetworkIds(server));
         ids.sort(Comparator.comparing(ResourceLocation::toString));
         return ids;
     }

@@ -3,6 +3,7 @@ package com.finndog.locatenext.server;
 import com.finndog.locatenext.LocateNext;
 import com.finndog.locatenext.net.NavStatePayload;
 import com.finndog.locatenext.net.Net;
+import com.finndog.locatenext.server.compat.MoogsPathsCompat;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -24,9 +25,11 @@ import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStruct
 import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Owns every player's navigation cursor and performs the locate + teleport.
@@ -345,6 +348,10 @@ public final class NavigationManager {
         Optional<Holder.Reference<Structure>> holder =
                 StructureCatalog.holder(registry, ResourceKey.create(Registries.STRUCTURE, id));
         if (holder.isEmpty()) {
+            if (MoogsPathsCompat.isNetwork(server, id)) {
+                searchPath(player, state, id, history, wantNew);
+                return;
+            }
             Msg.error(player, "Structure " + id + " vanished from the registry (datapack reload?).");
             return;
         }
@@ -431,12 +438,84 @@ public final class NavigationManager {
 
         // Only now, so the header's variant counter reflects the instance just added.
         reportHeader(player, state, id, history);
+        reportLanded(player, landing, distance, Msg.compass(playerInTarget, structurePos),
+                elapsedMs, attempts, level, origin);
+    }
 
+    /**
+     * A Moog's Paths network id is searched in the Overworld only, from the player's position
+     * scaled into it. Origins already in the history are excluded when fresh-only is on and always
+     * when hunting a new path, so a search never hands back one the player has been sent to.
+     */
+    private static void searchPath(ServerPlayer player, NavigationState state, ResourceLocation id,
+                                   VariantHistory history, boolean wantNew) {
+        MinecraftServer server = Players.server(player);
+        ServerLevel origin = Players.level(player);
+        ServerLevel level = server.overworld();
+
+        if (level != origin && !state.autoDimension()) {
+            reportHeader(player, state, id, history);
+            Msg.info(player, Msg.dim("  cannot generate in ")
+                    .append(Component.literal(LocateNext.keyId(origin.dimension()).toString())
+                            .withStyle(ChatFormatting.RED))
+                    .append(Msg.dim(" (auto-dimension is off)")));
+            Msg.plain(player, Msg.navBar());
+            return;
+        }
+
+        BlockPos playerPos = player.blockPosition();
+        BlockPos from = scaleAcrossDimensions(playerPos, origin, level);
+        Set<BlockPos> excluded = wantNew || state.unexploredOnly() ? pathOrigins(history, level) : Set.of();
+
+        Msg.info(player, Msg.dim("Locating " + id + "…"));
+
+        long startNanos = System.nanoTime();
+        Optional<MoogsPathsCompat.Found> hit = MoogsPathsCompat.locate(server, id, from, excluded)
+                .filter(path -> !history.contains(level.dimension(), path.origin()));
+        long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000L;
+
+        if (hit.isEmpty()) {
+            reportHeader(player, state, id, history);
+            Msg.info(player, Component.empty()
+                    .append(Msg.dim("  "))
+                    .append(Component.literal(excluded.isEmpty()
+                                    ? "no path found"
+                                    : "no path found that you haven't already visited")
+                            .withStyle(ChatFormatting.RED))
+                    .append(Msg.dim("  (" + elapsedMs + " ms, 1 search)")));
+            Msg.plain(player, Msg.navBar());
+            return;
+        }
+
+        MoogsPathsCompat.Found found = hit.get();
+        BlockPos landing = SafeSpot.find(level, found.landing());
+
+        history.add(new VariantHistory.Landing(level.dimension(), found.origin(), landing));
+        state.rememberHome(origin.dimension(), playerPos);
+        teleport(player, level, landing);
+        state.markVisited(id);
+
+        reportHeader(player, state, id, history);
+        reportLanded(player, landing, found.distance(), Msg.compass(from, found.landing()),
+                elapsedMs, 0, level, origin);
+    }
+
+    private static Set<BlockPos> pathOrigins(VariantHistory history, ServerLevel level) {
+        Set<BlockPos> origins = new HashSet<>();
+        for (VariantHistory.Landing landing : history.landings()) {
+            if (landing.dimension() == level.dimension()) {
+                origins.add(landing.structurePos());
+            }
+        }
+        return origins;
+    }
+
+    private static void reportLanded(ServerPlayer player, BlockPos landing, double distance, String bearing,
+                                     long elapsedMs, int attempts, ServerLevel level, ServerLevel origin) {
         MutableComponent line = Component.empty()
                 .append(Msg.dim("  at ")).append(Msg.coords(landing))
                 .append(Msg.dim("  "))
-                .append(Component.literal(Msg.formatDistance(distance) + " blocks "
-                                + Msg.compass(playerInTarget, structurePos))
+                .append(Component.literal(Msg.formatDistance(distance) + " blocks " + bearing)
                         .withStyle(ChatFormatting.GREEN))
                 .append(Msg.dim("  in " + elapsedMs + " ms"));
         if (attempts > 0) {
@@ -483,6 +562,7 @@ public final class NavigationManager {
         Msg.info(player, Msg.dim("Sweeping " + state.size() + " structures at radius "
                 + state.radius() + " — the server will hang until this finishes."));
 
+        Set<ResourceLocation> networks = new HashSet<>(MoogsPathsCompat.networks(server));
         List<String> missing = new ArrayList<>();
         int found = 0;
         long sweepStart = System.nanoTime();
@@ -491,6 +571,20 @@ public final class NavigationManager {
             Optional<Holder.Reference<Structure>> holder =
                     StructureCatalog.holder(registry, ResourceKey.create(Registries.STRUCTURE, id));
             if (holder.isEmpty()) {
+                if (networks.contains(id)) {
+                    ServerLevel overworld = server.overworld();
+                    long pathStart = System.nanoTime();
+                    Optional<MoogsPathsCompat.Found> pathHit = MoogsPathsCompat.locate(server, id,
+                            scaleAcrossDimensions(playerPos, origin, overworld), Set.of());
+                    long pathMs = (System.nanoTime() - pathStart) / 1_000_000L;
+                    if (pathHit.isEmpty()) {
+                        missing.add(id.getPath() + " (no path found, " + pathMs + " ms)");
+                    } else {
+                        found++;
+                        reportSweepHit(player, id, pathHit.get().distance(), pathMs, overworld, origin);
+                    }
+                    continue;
+                }
                 missing.add(id.getPath() + " (not in registry)");
                 continue;
             }
@@ -517,11 +611,7 @@ public final class NavigationManager {
                 found++;
                 double distance = Math.sqrt(searchFrom.distSqr(
                         new BlockPos(hit.getFirst().getX(), searchFrom.getY(), hit.getFirst().getZ())));
-                Msg.plain(player, Component.empty()
-                        .append(Component.literal("  ✔ ").withStyle(ChatFormatting.GREEN))
-                        .append(Msg.structure(id.getPath()))
-                        .append(Msg.dim("  " + Msg.formatDistance(distance) + " blocks, " + ms + " ms"
-                                + (level != origin ? ", " + LocateNext.keyId(level.dimension()).getPath() : ""))));
+                reportSweepHit(player, id, distance, ms, level, origin);
             }
         }
 
@@ -537,6 +627,15 @@ public final class NavigationManager {
                 .append(Component.literal(missing.size() + " missing").withStyle(
                         missing.isEmpty() ? ChatFormatting.GREEN : ChatFormatting.RED))
                 .append(Msg.dim("  in " + totalMs + " ms")));
+    }
+
+    private static void reportSweepHit(ServerPlayer player, ResourceLocation id, double distance, long ms,
+                                       ServerLevel level, ServerLevel origin) {
+        Msg.plain(player, Component.empty()
+                .append(Component.literal("  ✔ ").withStyle(ChatFormatting.GREEN))
+                .append(Msg.structure(id.getPath()))
+                .append(Msg.dim("  " + Msg.formatDistance(distance) + " blocks, " + ms + " ms"
+                        + (level != origin ? ", " + LocateNext.keyId(level.dimension()).getPath() : ""))));
     }
 
     // ------------------------------------------------------------------ helpers
