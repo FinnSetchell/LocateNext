@@ -14,6 +14,7 @@ import com.finndog.locatenext.client.ClientStructureIndex;
 import com.finndog.locatenext.command.LocateNextCommand;
 import com.finndog.locatenext.net.NavStatePayload;
 import com.finndog.locatenext.net.NavigatePayload;
+import com.finndog.locatenext.net.Net;
 import com.finndog.locatenext.net.SelectModPayload;
 import com.finndog.locatenext.net.StructureIndexPayload;
 import com.finndog.locatenext.server.NavigationManager;
@@ -42,7 +43,7 @@ public final class LocateNextForgeLegacy {
             LocateNext.id("main"),
             () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals
+            Net.dedicatedServer() ? NetworkRegistry.acceptMissingOr(PROTOCOL_VERSION) : PROTOCOL_VERSION::equals
     );
 
     public LocateNextForgeLegacy() {

@@ -15,7 +15,9 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.network.FriendlyByteBuf;
 *///?}
 //? if neoforge {
-/*import net.neoforged.neoforge.network.PacketDistributor;
+/*import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.network.PacketDistributor;
 *///?}
 // Forge's own SimpleChannel needs an explicit channel reference to send on, unlike NeoForge's
 // PacketDistributor (no channel concept) or Fabric's connection-bound ServerPlayNetworking. That
@@ -24,6 +26,10 @@ import net.minecraft.network.FriendlyByteBuf;
 // net.minecraftforge.network.simple.SimpleChannel to net.minecraftforge.network.SimpleChannel plus
 // the messageBuilder API, and 1.21.6 replaced FMLJavaModLoadingContext/getModEventBus with
 // EventBus 7's bus groups. Confirmed against the real 1.20.1/1.20.4/1.20.6/1.21.1 Forge sources.
+//? if forge {
+/*import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+*///?}
 //? if forge && <1.20.4 {
 /*import net.minecraftforge.network.PacketDistributor;
 import com.finndog.locatenext.forge.LocateNextForgeLegacy;
@@ -85,6 +91,25 @@ public final class Net {
         // receiver registration. On NeoForge: nothing to declare here at all — see the class doc.
     }
 
+    // NeoForge and Forge make a channel optional for both directions at once, so the flag is only
+    // set on a dedicated server: clients without the mod can join it, while a client that has the
+    // mod keeps refusing servers that lack it, because ClientNet sends without a channel check.
+    //? if neoforge && <1.21.9 {
+    /*public static boolean dedicatedServer() {
+        return FMLEnvironment.dist == Dist.DEDICATED_SERVER;
+    }
+    *///?}
+    //? if neoforge && >=1.21.9 {
+    /*public static boolean dedicatedServer() {
+        return FMLEnvironment.getDist() == Dist.DEDICATED_SERVER;
+    }
+    *///?}
+    //? if forge {
+    /*public static boolean dedicatedServer() {
+        return FMLEnvironment.dist == Dist.DEDICATED_SERVER;
+    }
+    *///?}
+
     /** Fabric only. */
     public static void onNavigate(BiConsumer<ServerPlayer, NavigatePayload> handler) {
         //? if fabric && >=1.20.5 {
@@ -117,53 +142,81 @@ public final class Net {
 
     public static void send(ServerPlayer player, StructureIndexPayload payload) {
         //? if fabric && >=1.20.5 {
-        ServerPlayNetworking.send(player, payload);
+        if (ServerPlayNetworking.canSend(player, StructureIndexPayload.TYPE)) {
+            ServerPlayNetworking.send(player, payload);
+        }
         //?}
         //? if fabric && <1.20.5 {
-        /*FriendlyByteBuf buf = PacketByteBufs.create();
-        payload.write(buf);
-        ServerPlayNetworking.send(player, StructureIndexPayload.ID, buf);
+        /*if (ServerPlayNetworking.canSend(player, StructureIndexPayload.ID)) {
+            FriendlyByteBuf buf = PacketByteBufs.create();
+            payload.write(buf);
+            ServerPlayNetworking.send(player, StructureIndexPayload.ID, buf);
+        }
         *///?}
         //? if neoforge && >=1.20.5 {
-        /*PacketDistributor.sendToPlayer(player, payload);
+        /*if (player.connection.hasChannel(StructureIndexPayload.TYPE)) {
+            PacketDistributor.sendToPlayer(player, payload);
+        }
         *///?}
         //? if neoforge && <1.20.5 {
-        /*PacketDistributor.PLAYER.with(player).send(payload);
+        /*if (player.connection.isConnected(StructureIndexPayload.ID)) {
+            PacketDistributor.PLAYER.with(player).send(payload);
+        }
         *///?}
         //? if forge && <1.20.4 {
-        /*LocateNextForgeLegacy.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
+        /*if (LocateNextForgeLegacy.CHANNEL.isRemotePresent(player.connection.connection)) {
+            LocateNextForgeLegacy.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
+        }
         *///?}
         //? if forge && >=1.20.4 && <1.21.6 {
-        /*LocateNextForge.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        /*if (LocateNextForge.CHANNEL.isRemotePresent(player.connection.getConnection())) {
+            LocateNextForge.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        }
         *///?}
         //? if forge && >=1.21.6 {
-        /*LocateNextForgeEventBus7.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        /*if (LocateNextForgeEventBus7.CHANNEL.isRemotePresent(player.connection.getConnection())) {
+            LocateNextForgeEventBus7.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        }
         *///?}
     }
 
     public static void send(ServerPlayer player, NavStatePayload payload) {
         //? if fabric && >=1.20.5 {
-        ServerPlayNetworking.send(player, payload);
+        if (ServerPlayNetworking.canSend(player, NavStatePayload.TYPE)) {
+            ServerPlayNetworking.send(player, payload);
+        }
         //?}
         //? if fabric && <1.20.5 {
-        /*FriendlyByteBuf buf = PacketByteBufs.create();
-        payload.write(buf);
-        ServerPlayNetworking.send(player, NavStatePayload.ID, buf);
+        /*if (ServerPlayNetworking.canSend(player, NavStatePayload.ID)) {
+            FriendlyByteBuf buf = PacketByteBufs.create();
+            payload.write(buf);
+            ServerPlayNetworking.send(player, NavStatePayload.ID, buf);
+        }
         *///?}
         //? if neoforge && >=1.20.5 {
-        /*PacketDistributor.sendToPlayer(player, payload);
+        /*if (player.connection.hasChannel(NavStatePayload.TYPE)) {
+            PacketDistributor.sendToPlayer(player, payload);
+        }
         *///?}
         //? if neoforge && <1.20.5 {
-        /*PacketDistributor.PLAYER.with(player).send(payload);
+        /*if (player.connection.isConnected(NavStatePayload.ID)) {
+            PacketDistributor.PLAYER.with(player).send(payload);
+        }
         *///?}
         //? if forge && <1.20.4 {
-        /*LocateNextForgeLegacy.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
+        /*if (LocateNextForgeLegacy.CHANNEL.isRemotePresent(player.connection.connection)) {
+            LocateNextForgeLegacy.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
+        }
         *///?}
         //? if forge && >=1.20.4 && <1.21.6 {
-        /*LocateNextForge.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        /*if (LocateNextForge.CHANNEL.isRemotePresent(player.connection.getConnection())) {
+            LocateNextForge.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        }
         *///?}
         //? if forge && >=1.21.6 {
-        /*LocateNextForgeEventBus7.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        /*if (LocateNextForgeEventBus7.CHANNEL.isRemotePresent(player.connection.getConnection())) {
+            LocateNextForgeEventBus7.CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
+        }
         *///?}
     }
 }

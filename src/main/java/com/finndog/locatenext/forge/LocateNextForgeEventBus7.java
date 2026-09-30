@@ -16,6 +16,7 @@ import com.finndog.locatenext.client.ClientStructureIndex;
 import com.finndog.locatenext.command.LocateNextCommand;
 import com.finndog.locatenext.net.NavStatePayload;
 import com.finndog.locatenext.net.NavigatePayload;
+import com.finndog.locatenext.net.Net;
 import com.finndog.locatenext.net.SelectModPayload;
 import com.finndog.locatenext.net.StructureIndexPayload;
 import com.finndog.locatenext.server.NavigationManager;
@@ -34,10 +35,17 @@ import net.minecraftforge.network.SimpleChannel;
 @Mod(LocateNext.MOD_ID)
 public final class LocateNextForgeEventBus7 {
 
-    public static final SimpleChannel CHANNEL = ChannelBuilder
-            .named(LocateNext.id("main"))
-            .networkProtocolVersion(1)
-            .simpleChannel();
+    public static final SimpleChannel CHANNEL = createChannel();
+
+    private static SimpleChannel createChannel() {
+        ChannelBuilder builder = ChannelBuilder
+                .named(LocateNext.id("main"))
+                .networkProtocolVersion(1);
+        if (Net.dedicatedServer()) {
+            builder = builder.optional();
+        }
+        return builder.simpleChannel();
+    }
 
     public LocateNextForgeEventBus7() {
         registerPayloads();

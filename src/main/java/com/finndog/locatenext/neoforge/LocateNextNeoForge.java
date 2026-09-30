@@ -45,6 +45,9 @@ public final class LocateNextNeoForge {
 
     private static void onRegisterPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar("1");
+        if (Net.dedicatedServer()) {
+            registrar = registrar.optional();
+        }
 
         registrar.playToServer(NavigatePayload.TYPE, NavigatePayload.CODEC, (payload, context) -> {
             ServerPlayer player = (ServerPlayer) context.player();
