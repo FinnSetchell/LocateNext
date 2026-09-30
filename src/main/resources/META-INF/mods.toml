@@ -2,9 +2,10 @@
 # `mandatory = true` shape NeoForge's own 1.20.4 fork still carried at the point it forked from
 # Forge, before NeoForge evolved its own neoforge.mods.toml. Shared by both: the loader dependency
 # modid/range is templated (${loader_dep}/${loader_dep_range}) so Forge's build script can point it
-# at "forge" and NeoForge's legacy (1.20.4) build can point it at "neoforge".
+# at "forge" and NeoForge's legacy (1.20.4) build can point it at "neoforge". The javafml language
+# range is templated too (${loader_version_range}): NeoForge 20.4 ships javafml 2.0, Forge ships 4+.
 modLoader = "javafml"
-loaderVersion = "[4,)"
+loaderVersion = "${loader_version_range}"
 license = "${license}"
 
 [[mods]]

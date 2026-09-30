@@ -59,6 +59,8 @@ tasks {
             "minecraft" to sc.properties.get<String>("mod.mc_compat"),
             // Shared with NeoForge's legacy mods.toml — see the note in that file.
             "loader_dep" to "forge",
+            // javafml language range for the shared mods.toml. Every Forge node loads with this floor.
+            "loader_version_range" to "[4,)",
             // Declared floor, not the build version — see the note in stonecutter.properties.toml.
             "loader_dep_range" to "[${sc.properties.get<String>("deps.forge_min")},)",
             "pack_format" to sc.properties.get<String>("mod.pack_format"),

@@ -42,7 +42,7 @@ public final class LocateNextNeoForgeLegacy {
     }
 
     private static void onRegisterPayloads(RegisterPayloadHandlerEvent event) {
-        IPayloadRegistrar registrar = event.registrar("1");
+        IPayloadRegistrar registrar = event.registrar(LocateNext.MOD_ID).versioned("1");
         if (Net.dedicatedServer()) {
             registrar = registrar.optional();
         }
