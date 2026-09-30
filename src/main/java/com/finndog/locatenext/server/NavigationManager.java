@@ -546,7 +546,9 @@ public final class NavigationManager {
 
     /**
      * Locates every structure in the selected mod without teleporting, and reports which ones the
-     * generator could not place. Catches "this structure never spawns" bugs in one pass.
+     * generator could not place. Catches "this structure never spawns" bugs in one pass. Moog's Paths
+     * path networks are listed as skipped: locating all of them blocks the server thread for close
+     * to a minute, long enough for the watchdog to kill a default server.
      */
     public static void sweep(ServerPlayer player) {
         NavigationState state = state(player);
@@ -565,6 +567,7 @@ public final class NavigationManager {
         Set<ResourceLocation> networks = new HashSet<>(MoogsPathsCompat.networks(server));
         List<String> missing = new ArrayList<>();
         int found = 0;
+        int skipped = 0;
         long sweepStart = System.nanoTime();
 
         for (ResourceLocation id : state.structures()) {
@@ -572,17 +575,11 @@ public final class NavigationManager {
                     StructureCatalog.holder(registry, ResourceKey.create(Registries.STRUCTURE, id));
             if (holder.isEmpty()) {
                 if (networks.contains(id)) {
-                    ServerLevel overworld = server.overworld();
-                    long pathStart = System.nanoTime();
-                    Optional<MoogsPathsCompat.Found> pathHit = MoogsPathsCompat.locate(server, id,
-                            scaleAcrossDimensions(playerPos, origin, overworld), Set.of());
-                    long pathMs = (System.nanoTime() - pathStart) / 1_000_000L;
-                    if (pathHit.isEmpty()) {
-                        missing.add(id.getPath() + " (no path found, " + pathMs + " ms)");
-                    } else {
-                        found++;
-                        reportSweepHit(player, id, pathHit.get().distance(), pathMs, overworld, origin);
-                    }
+                    skipped++;
+                    Msg.plain(player, Component.empty()
+                            .append(Component.literal("  ~ ").withStyle(ChatFormatting.GRAY))
+                            .append(Msg.structure(id.getPath()))
+                            .append(Msg.dim("  path network, skipped: use goto")));
                     continue;
                 }
                 missing.add(id.getPath() + " (not in registry)");
@@ -626,6 +623,7 @@ public final class NavigationManager {
                 .append(Msg.dim(", "))
                 .append(Component.literal(missing.size() + " missing").withStyle(
                         missing.isEmpty() ? ChatFormatting.GREEN : ChatFormatting.RED))
+                .append(Msg.dim(skipped > 0 ? ", " + skipped + " skipped" : ""))
                 .append(Msg.dim("  in " + totalMs + " ms")));
     }
 
