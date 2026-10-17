@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0] - 2026-10-17
+
+### Added
+- Moog's Paths path networks can be browsed and travelled to just like structures, with Moog's Paths 1.1.0 or newer
+  - Sweep lists path networks without searching for them
+- Players without LocateNext can now join NeoForge and Forge servers running it and use its commands
+
+### Fixed
+- LocateNext now loads on NeoForge 1.20.4
+
+---
+
 ## [1.6.0] - 2026-09-25
 
 ### Added
