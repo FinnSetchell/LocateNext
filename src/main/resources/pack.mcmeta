@@ -1,6 +1,9 @@
 {
   "pack": {
     "description": "${name}",
-    "pack_format": ${pack_format}
+    "pack_format": ${pack_format},
+    "supported_formats": [15, 121],
+    "min_format": 15,
+    "max_format": 121
   }
 }
