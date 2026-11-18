@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- No more "Couldn't load locatenext pack metadata" error in the log on Minecraft 1.21.9 and newer
+
+---
+
 ## [1.7.0] - 2026-10-17
 
 ### Added
